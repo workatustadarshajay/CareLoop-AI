@@ -1,2 +1,18 @@
 # CareLoop-AI
 .github
+
+# Local secrets and environments
+.env
+**/.env
+!.env.example
+Backend/.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Frontend
+Frontend/node_modules/
+Frontend/dist/

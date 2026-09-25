@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: careloop
+      POSTGRES_PASSWORD: careloop
+      POSTGRES_DB: careloop
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careloop -d careloop"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  pgdata:
