@@ -38,6 +38,7 @@ class Card(Base):
         nullable=False,
     )
     description: Mapped[str] = mapped_column(String(500), nullable=False)
+    description_plain: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     status: Mapped[CardStatus] = mapped_column(
         Enum(
             CardStatus,

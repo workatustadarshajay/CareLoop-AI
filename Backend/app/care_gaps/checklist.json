@@ -1,0 +1,67 @@
+{
+  "diagnoses": [
+    {
+      "name": "heart failure",
+      "aliases": ["heart failure", "congestive heart failure", "CHF", "HFrEF", "HFpEF"],
+      "expected_items": [
+        {
+          "label": "weight-monitoring follow-up",
+          "card_type": "general_task",
+          "card_description": "Monitor weight daily and report a gain of more than 2 kg in a week"
+        },
+        {
+          "label": "medication reconciliation",
+          "card_type": "medication",
+          "card_description": "Reconcile current medications against the heart failure regimen"
+        },
+        {
+          "label": "cardiology follow-up within 2 weeks",
+          "card_type": "referral",
+          "card_description": "Cardiology follow-up within 2 weeks"
+        }
+      ]
+    },
+    {
+      "name": "type 2 diabetes",
+      "aliases": ["type 2 diabetes", "type II diabetes", "T2DM", "diabetes mellitus type 2"],
+      "expected_items": [
+        {
+          "label": "HbA1c test",
+          "card_type": "test",
+          "card_description": "Check HbA1c"
+        },
+        {
+          "label": "diabetic eye exam referral",
+          "card_type": "referral",
+          "card_description": "Referral for a diabetic retinal eye exam"
+        },
+        {
+          "label": "foot examination",
+          "card_type": "general_task",
+          "card_description": "Diabetic foot examination"
+        }
+      ]
+    },
+    {
+      "name": "hypertension",
+      "aliases": ["hypertension", "high blood pressure", "HTN"],
+      "expected_items": [
+        {
+          "label": "home blood pressure monitoring",
+          "card_type": "general_task",
+          "card_description": "Monitor blood pressure at home and keep a log"
+        },
+        {
+          "label": "kidney function blood test",
+          "card_type": "test",
+          "card_description": "Basic metabolic panel to check kidney function and electrolytes"
+        },
+        {
+          "label": "blood pressure follow-up visit",
+          "card_type": "next_visit",
+          "card_description": "Follow-up visit to recheck blood pressure"
+        }
+      ]
+    }
+  ]
+}

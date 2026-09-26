@@ -289,6 +289,42 @@ button:disabled {
   line-height: 1.2;
 }
 
+.card-clinical-section {
+  margin: -6px 0 16px;
+}
+
+.card-toggle {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  font: 700 11px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.card-toggle:hover {
+  color: var(--accent);
+}
+
+.card-clinical {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (max-width: 480px) {
+  .card-toggle {
+    width: auto;
+    justify-content: flex-start;
+  }
+}
+
 .card-meta {
   display: flex;
   justify-content: space-between;

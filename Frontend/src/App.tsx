@@ -9,6 +9,7 @@ type Card = {
   note_id: number
   type: CardType
   description: string
+  description_plain: string | null
   status: 'open' | 'done'
   created_at: string
 }
@@ -39,6 +40,32 @@ function formatDate(value: string): string {
     day: 'numeric',
     year: 'numeric',
   }).format(new Date(value))
+}
+
+function CardBody({ card }: { card: Card }) {
+  const [showClinical, setShowClinical] = useState(false)
+  const hasPlainVersion = card.description_plain !== null && card.description_plain !== ''
+
+  return (
+    <>
+      <p className="card-description">
+        {hasPlainVersion ? card.description_plain : card.description}
+      </p>
+      {hasPlainVersion && (
+        <div className="card-clinical-section">
+          <button
+            type="button"
+            className="card-toggle"
+            aria-expanded={showClinical}
+            onClick={() => setShowClinical((current) => !current)}
+          >
+            {showClinical ? 'Hide clinical wording' : 'Show clinical wording'}
+          </button>
+          {showClinical && <p className="card-clinical">{card.description}</p>}
+        </div>
+      )}
+    </>
+  )
 }
 
 function App() {
@@ -187,7 +214,7 @@ function App() {
                     <span aria-hidden="true" />
                     {typeLabels[card.type]}
                   </div>
-                  <p className="card-description">{card.description}</p>
+                  <CardBody card={card} />
                   <div className="card-meta">
                     <span>{card.status}</span>
                     <time dateTime={card.created_at}>{formatDate(card.created_at)}</time>
