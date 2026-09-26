@@ -3,10 +3,13 @@
 import json
 import logging
 import os
+import ssl
 import time
 from pathlib import Path
 
+import httpx
 import psycopg
+from huggingface_hub import set_client_factory
 from laya import Router
 
 logger = logging.getLogger("urgency_watcher")
@@ -51,10 +54,20 @@ RETURNING id
 """
 
 
+def configure_hub_tls() -> None:
+    """Python 3.13's strict X.509 checks reject some proxy root CAs; opt out of only that flag."""
+    if os.environ.get("RELAX_X509_STRICT") != "1":
+        return
+    context = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE"))
+    context.verify_flags &= ~ssl.VERIFY_X509_STRICT
+    set_client_factory(lambda: httpx.Client(verify=context, follow_redirects=True, timeout=None))
+
+
 def classify(router: Router, text: str) -> tuple[str, float | None, str | None, dict]:
     result = router.predict(text, QUESTIONS)
     answer = result["answers"]["urgency"]
-    return answer["choice"], answer.get("confidence"), result.get("routing", {}).get("model"), answer
+    choice = answer["choice"]
+    return choice, answer.get("probabilities", {}).get(choice), result.get("routing", {}).get("model"), answer
 
 
 def move(path: Path, folder: str) -> None:
@@ -103,6 +116,7 @@ def main() -> None:
         conn.execute(SCHEMA_SQL)
 
     logger.info("Loading laya (the first run downloads the model checkpoint)...")
+    configure_hub_tls()
     router = Router()
     classify(router, "Warm-up message.")
     logger.info("Watching %s every %s s for .txt files", WATCH_DIR.resolve(), POLL_SECONDS)
