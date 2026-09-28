@@ -1,0 +1,153 @@
+================================================================
+ CARELOOP × GEMINI MCP DEMO — RUN GUIDE
+================================================================
+
+What this is:
+  Gemini (gemini-3.6-flash) reads your plain-English request, decides
+  which CareLoop MCP tools to call, executes them against the CareLoop
+  API through the MCP server, and reports the results.
+
+  Flow:  Gemini ⇄ mcp/gemini_client.py ⇄ MCP server (:8100)
+         ⇄ CareLoop API (Backend) ⇄ Postgres
+
+Files involved:
+  mcp/gemini_client.py   the Gemini-powered MCP client (this demo)
+  mcp/demo_client.py     shared MCP wire client (no SDK)
+  mcp/server.py          the MCP server (6 careloop_* tools)
+  mcp/careloop_client.py REST API client used by the MCP server
+  mcp/.env               GEMINI_API_KEY / GEMINI_MODEL  (git-ignored)
+  mcp/test_gemini_client.py   offline unit tests (no key needed)
+
+----------------------------------------------------------------
+0. ONE-TIME CHECK — API KEY
+----------------------------------------------------------------
+mcp/.env must contain (already set up):
+
+  GEMINI_API_KEY=AQ.Ab8RN6...your key...
+  GEMINI_MODEL=gemini-3.6-flash
+
+Get/rotate keys: https://aistudio.google.com/apikey
+NOTE: the key was pasted into chat once — consider rotating it.
+
+----------------------------------------------------------------
+1. EASIEST — INTERACTIVE LAUNCHER (run_demo.sh)
+----------------------------------------------------------------
+The script reuses the CareLoop API already running on port 8000
+(never kills or duplicates it), starts the MCP server on 8100,
+resets the demo data, and gives you a menu:
+
+  bash mcp/run_demo.sh
+
+Menu options:
+  1  Run the classic demo  — find the at-risk card, close the MRI,
+                             watch the risk clear, then show status
+  2  Ask Gemini anything   — type your own request, see it plan and
+                             call MCP tools live
+  3  Show demo data status — what cards 10 & 12 look like right now
+  4  Reset demo data       — put card 12 open / card 10 at_risk again
+  q  Quit
+
+Other entry points:
+  bash mcp/run_demo.sh "list Alice's cards"   # one-shot, then exit
+  bash mcp/run_demo.sh --chat                 # straight into chat mode
+
+Logs land in /tmp/careloop_api.log and /tmp/careloop_mcp.log.
+Do NOT paste old manual command blocks — copy-paste mangles the
+backslash line-continuations and `exec` would replace your shell
+(that is what closed the terminal earlier).
+
+Manual equivalent (only if you really want separate terminals): see §2.
+
+----------------------------------------------------------------
+2. THREE-TERMINAL SETUP (good for live presenting)
+----------------------------------------------------------------
+Terminal 1 — CareLoop API (skip if it is already running on 8000):
+  cd Backend
+  uv run --system-certs uvicorn app.main:app --port 8000
+
+Terminal 2 — MCP server (points at the API):
+  cd mcp
+  CARELOOP_API_URL=http://localhost:8000/api \
+  uv run --system-certs uvicorn server:app --port 8100
+
+  # sanity check (should return JSON with "tools": 6):
+  curl http://localhost:8100/health
+
+Terminal 3 — Gemini demo:
+  cd mcp
+  CARELOOP_API_URL=http://localhost:8000/api uv run --system-certs python gemini_client.py --chat
+
+----------------------------------------------------------------
+3. DEMO MODES
+----------------------------------------------------------------
+One-shot scripted task (best for a recording):
+  uv run --system-certs python gemini_client.py --task "Your request here"
+
+Interactive chat (type requests, empty line quits):
+  uv run --system-certs python gemini_client.py --chat
+
+Different MCP server address:
+  uv run --system-certs python gemini_client.py --chat --mcp-base http://localhost:8100
+
+Example tasks that show off the tools:
+  "List all patients and show Alice Johnson's open cards."
+  "Which of Alice's cards are at risk and why?"
+  "Close card 21 with evidence 'Fasting lipid panel completed this morning'."
+  "Flag card 13 at risk because the lab result was never received."
+  (Do NOT ask it to close a card without giving evidence — by design it
+   will ask you for evidence instead of inventing it.)
+
+----------------------------------------------------------------
+4. THE DEMO STORY (what to say while it runs)
+----------------------------------------------------------------
+1. Gemini gets the 6 CareLoop tools live from the MCP server.
+2. It plans: find patient -> find at-risk card -> inspect dependencies.
+3. It discovers card 10 (Neurology follow-up) is blocked by card 12 (MRI).
+4. It closes card 12 WITH the evidence you supplied.
+5. The CareLoop API re-checks the dependency graph: card 10's risk clears.
+6. Gemini re-reads both cards and reports exactly what changed.
+   Same invariants as the in-app flow — but driven by natural language.
+
+----------------------------------------------------------------
+5. RUN THE OFFLINE TESTS (no API key, no servers needed)
+----------------------------------------------------------------
+  cd mcp && uv run --system-certs python -m pytest test_gemini_client.py -q
+  Expected: 5 passed.
+
+----------------------------------------------------------------
+6. TROUBLESHOOTING
+----------------------------------------------------------------
+401 ACCESS_TOKEN_TYPE_UNSUPPORTED from Google
+  -> The key in mcp/.env is wrong/truncated/altered. Re-copy the full
+     key from AI Studio (AQ.... for Gemini-API keys). Check for stray
+     spaces or quotes. Test directly:
+     curl -s https://generativelanguage.googleapis.com/v1beta/interactions \
+       -H "x-goog-api-key: $GEMINI_API_KEY" -H 'Content-Type: application/json' \
+       -d '{"model":"gemini-3.6-flash","input":"Say OK"}'
+
+400 Invalid JSON payload mentioning tools/schema
+  -> Should not happen anymore: gemini_client.py prunes FastMCP's
+     Pydantic schemas to what Gemini accepts.
+
+"function call turn comes immediately after a user turn"
+  -> Fixed: the replay always starts with the user turn.
+
+MCP 404 on /mcp/mcp
+  -> You passed a --mcp-base ending in /mcp. Pass the base only:
+     --mcp-base http://localhost:8100
+
+"Error executing tool ... Extra inputs are not permitted / params"
+  -> Fixed: the bridge unwraps a redundant {"params": ...} echo from
+     the model before dispatching.
+
+Port already in use (8000 = docs site, 8001 = other project here)
+  -> The scripts above use 8000 for the API and 8100 for MCP.
+     Kill leftovers with:  pkill -f uvicorn
+
+Tool call shows "CareLoop API unreachable"
+  -> The CareLoop API isn't running or CARELOOP_API_URL doesn't match
+     the port you started it on.
+
+Data looks used-up (cards already closed)
+  -> Re-run the reset block from section 1 (sets card 12 open,
+     card 10 at_risk).

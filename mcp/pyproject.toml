@@ -1,0 +1,16 @@
+[project]
+name = "careloop-mcp"
+version = "0.2.0"
+description = "CareLoop AI MCP server: expose care-plan cards and notes as MCP tools for AI portals and existing apps, via the CareLoop REST API."
+requires-python = ">=3.13"
+dependencies = [
+    "google-genai>=2.25.0",
+    "httpx>=0.27.0",
+    "mcp>=1.10,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+]
