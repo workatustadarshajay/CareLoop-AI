@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -12,5 +12,8 @@ class CardRead(BaseModel):
     note_id: int
     type: CardType
     description: str
+    due_date: date | None
     status: CardStatus
     created_at: datetime
+    verified_at: datetime | None
+    verified_by_note_id: int | None

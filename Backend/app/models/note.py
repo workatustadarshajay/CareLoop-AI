@@ -20,6 +20,7 @@ class Note(Base):
     cards: Mapped[list["Card"]] = relationship(
         back_populates="note",
         cascade="all, delete-orphan",
+        foreign_keys="Card.note_id",
     )
 
 

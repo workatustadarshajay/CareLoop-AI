@@ -1,6 +1,6 @@
 # CareLoop AI
 
-The foundation flow accepts a doctor's note, uses a Gemini tool-calling agent to save each actionable item as a card in Postgres, and displays all saved cards in the frontend.
+The foundation flow accepts a doctor's note, uses a Gemini tool-calling agent to save each actionable item as a card in Postgres, reminds patients about cards due within seven days, and automatically verifies cards closed when a follow-up note confirms completion.
 
 ## Run locally
 

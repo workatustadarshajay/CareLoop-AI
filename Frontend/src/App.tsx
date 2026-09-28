@@ -9,13 +9,24 @@ type Card = {
   note_id: number
   type: CardType
   description: string
-  status: 'open' | 'done'
+  status: 'open' | 'done' | 'verified_closed'
+  due_date: string | null
   created_at: string
+  verified_at: string | null
+  verified_by_note_id: number | null
 }
 
 type NoteProcessResponse = {
   note_id: number
   cards: Card[]
+  verified_closed_cards: Card[]
+}
+
+type Reminder = {
+  card_id: number
+  type: CardType
+  message: string
+  due_date: string
 }
 
 const apiUrl = import.meta.env.VITE_API_URL ?? '/api'
@@ -34,16 +45,18 @@ async function responseError(response: Response): Promise<string> {
 }
 
 function formatDate(value: string): string {
+  const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value
   return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).format(new Date(value))
+  }).format(new Date(dateValue))
 }
 
 function App() {
   const [noteText, setNoteText] = useState('')
   const [cards, setCards] = useState<Card[]>([])
+  const [reminders, setReminders] = useState<Reminder[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -54,13 +67,23 @@ function App() {
 
     async function loadCards() {
       try {
-        const response = await fetch(`${apiUrl}/cards`)
-        if (!response.ok) {
-          throw new Error(await responseError(response))
+        const [cardsResponse, remindersResponse] = await Promise.all([
+          fetch(`${apiUrl}/cards`),
+          fetch(`${apiUrl}/reminders`),
+        ])
+        if (!cardsResponse.ok) {
+          throw new Error(await responseError(cardsResponse))
         }
-        const data = await response.json() as Card[]
+        if (!remindersResponse.ok) {
+          throw new Error(await responseError(remindersResponse))
+        }
+        const [cardData, reminderData] = await Promise.all([
+          cardsResponse.json() as Promise<Card[]>,
+          remindersResponse.json() as Promise<Reminder[]>,
+        ])
         if (!cancelled) {
-          setCards(data)
+          setCards(cardData)
+          setReminders(reminderData)
           setError(null)
         }
       } catch (loadError) {
@@ -101,15 +124,36 @@ function App() {
       }
 
       const result = await response.json() as NoteProcessResponse
-      const cardsResponse = await fetch(`${apiUrl}/cards`)
+      const savedCount = result.cards.length
+      const closedCount = result.verified_closed_cards.length
+      setNoteText('')
+      setSuccessMessage(
+        [
+          savedCount > 0
+            ? `${savedCount} ${savedCount === 1 ? 'card' : 'cards'} saved`
+            : null,
+          closedCount > 0
+            ? `${closedCount} ${closedCount === 1 ? 'card' : 'cards'} verified closed`
+            : null,
+        ].filter(Boolean).join(' and ') || 'Note processed with no card changes.',
+      )
+
+      const [cardsResponse, remindersResponse] = await Promise.all([
+        fetch(`${apiUrl}/cards`),
+        fetch(`${apiUrl}/reminders`),
+      ])
       if (!cardsResponse.ok) {
         throw new Error(await responseError(cardsResponse))
       }
-      setCards(await cardsResponse.json() as Card[])
-      setNoteText('')
-      setSuccessMessage(
-        `${result.cards.length} ${result.cards.length === 1 ? 'card' : 'cards'} saved from this note.`,
-      )
+      if (!remindersResponse.ok) {
+        throw new Error(await responseError(remindersResponse))
+      }
+      const [cardData, reminderData] = await Promise.all([
+        cardsResponse.json() as Promise<Card[]>,
+        remindersResponse.json() as Promise<Reminder[]>,
+      ])
+      setCards(cardData)
+      setReminders(reminderData)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Could not process the note.')
     } finally {
@@ -163,7 +207,34 @@ function App() {
           </div>
         </form>
 
-        <section className="cards-panel" aria-labelledby="cards-title">
+        <div className="activity-column">
+          <section className="reminders-panel" aria-labelledby="reminders-title">
+            <div className="panel-heading reminder-heading">
+              <div>
+                <p className="eyebrow">Coming up</p>
+                <h2 id="reminders-title">Your reminders</h2>
+              </div>
+              <span className="reminder-count">{reminders.length}</span>
+            </div>
+
+            {isLoading ? (
+              <p className="reminders-empty">Checking what is due...</p>
+            ) : reminders.length === 0 ? (
+              <p className="reminders-empty">Nothing is due in the next seven days.</p>
+            ) : (
+              <ul className="reminder-list">
+                {reminders.map((reminder) => (
+                  <li key={reminder.card_id}>
+                    <span className={`reminder-dot type-${reminder.type}`} aria-hidden="true" />
+                    <p>{reminder.message}</p>
+                    <time dateTime={reminder.due_date}>{formatDate(reminder.due_date)}</time>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="cards-panel" aria-labelledby="cards-title">
           <div className="panel-heading">
             <div>
               <p className="eyebrow">02 / Your cards</p>
@@ -189,14 +260,17 @@ function App() {
                   </div>
                   <p className="card-description">{card.description}</p>
                   <div className="card-meta">
-                    <span>{card.status}</span>
-                    <time dateTime={card.created_at}>{formatDate(card.created_at)}</time>
+                    <span>{card.status.replace('_', ' ')}</span>
+                    <time dateTime={card.due_date ?? card.created_at}>
+                      {card.due_date ? `Due ${formatDate(card.due_date)}` : formatDate(card.created_at)}
+                    </time>
                   </div>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+          </section>
+        </div>
       </section>
     </main>
   )

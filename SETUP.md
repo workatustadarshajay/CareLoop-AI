@@ -1,6 +1,6 @@
 # CareLoop AI: Setup and Run Guide
 
-This guide takes you from a fresh checkout to a running app: paste a doctor's note, Gemini splits it into actionable items, each item is saved as a card in Postgres, and all cards appear in the UI.
+This guide takes you from a fresh checkout to a running app: paste a doctor's note, Gemini splits it into actionable items, each item is saved as a card in Postgres, upcoming due dates appear as reminders, and follow-up notes automatically verify completed cards closed.
 
 Commands are for a Linux or macOS shell. Run them from the repository root (`CareLoop-AI/`) unless a step says otherwise.
 
@@ -38,8 +38,9 @@ flowchart LR
 ```
 
 - The browser only talks to the Vite dev server. Vite forwards every `/api/...` request to the backend at `http://127.0.0.1:8000` (configured in `Frontend/vite.config.ts`). The browser never makes a cross-origin request, and only port 5173 has to be reachable from it.
-- When you submit a note, the backend saves it to the `notes` table. A Gemini agent then calls the `save_card` tool once per actionable item, and each call inserts a row into `cards`.
+- When you submit a note, the backend saves it to the `notes` table. A Gemini agent reconciles it with open cards, calls `verify_card_completed` for confirmed completions, and calls `save_card` once per new actionable item.
 - The note and its cards are saved in one transaction. If Gemini or the database fails, nothing from that note is saved.
+- Open cards with a due date in the next seven days (plus overdue cards) are returned by `/api/reminders`. Reminder messages are derived from card data rather than stored separately.
 
 ## 2. Prerequisites
 
@@ -92,7 +93,7 @@ uv run --system-certs alembic upgrade head
 uv run --system-certs alembic current
 ```
 
-The last command should print `0001_create_notes_and_cards (head)`. The migration creates the `notes` and `cards` tables and the `card_type` and `card_status` enum types. Running `upgrade head` again is safe: it does nothing when the database is already up to date.
+The last command should print `0002_reminders_verified_closure (head)`. The migrations create the `notes` and `cards` tables, add card due dates and verified-closure evidence, and create the `card_type` and `card_status` enum types. Running `upgrade head` again is safe: it does nothing when the database is already up to date.
 
 ### 3.3 Set up the frontend
 
@@ -178,13 +179,16 @@ Expected: `HTTP/1.1 201 Created` and a body with `note_id` and the saved `cards`
 1. Open <http://localhost:5173>.
 2. Paste a doctor's note (up to 12,000 characters) into **Doctor's note**.
 3. Click **Process note**. The button reads **Processing...** while Gemini works.
-4. A confirmation shows how many cards were saved. **Your cards** lists every card, newest first.
+4. A confirmation shows how many cards were saved or verified closed. **Your cards** lists every card, newest first.
+5. **Your reminders** lists open cards that are overdue or due in the next seven days.
+6. Submit a later note such as "The chest X-ray was completed today." to automatically set the matching open card to `verified_closed`.
 
 Each card shows:
 
 - a type: `medication`, `test`, `referral`, `next_visit`, or `general_task`
 - a short description
-- a status (new cards are `open`)
+- a due date when the note provides one
+- a status (`open` or `verified_closed`)
 - a creation date
 
 ## 7. Working over VS Code Remote-SSH
@@ -246,8 +250,9 @@ Backend base URL: `http://127.0.0.1:8000`. Interactive docs: `/docs`.
 
 | Method | Path | Request body | Success | Errors |
 | --- | --- | --- | --- | --- |
-| `POST` | `/api/notes/process` | `{"text": "..."}`, 1 to 12,000 characters after trimming whitespace | `201`, `{"note_id": 1, "cards": [...]}` | `422` invalid body, `503` no API key configured, `500` Gemini or database error |
+| `POST` | `/api/notes/process` | `{"text": "..."}`, 1 to 12,000 characters after trimming whitespace | `201`, `{"note_id": 1, "cards": [...], "verified_closed_cards": [...]}` | `422` invalid body, `503` no API key configured, `500` Gemini or database error |
 | `GET` | `/api/cards` | none | `200`, all cards, newest first | `500` database error |
+| `GET` | `/api/reminders` | none | `200`, reminders for open cards due within seven days or overdue | `500` database error |
 
 Card object:
 
@@ -258,11 +263,14 @@ Card object:
   "type": "medication",
   "description": "Start amoxicillin 500 mg twice daily for 7 days",
   "status": "open",
+  "due_date": "2026-10-05",
+  "verified_at": null,
+  "verified_by_note_id": null,
   "created_at": "2026-09-25T15:25:03.618138Z"
 }
 ```
 
-`type` is one of `medication`, `test`, `referral`, `next_visit`, `general_task`. `status` is `open` or `done`.
+`type` is one of `medication`, `test`, `referral`, `next_visit`, `general_task`. New cards use `open`, automatically confirmed cards use `verified_closed`, and the legacy `done` value remains readable for existing data. A verified card records when it was closed and the follow-up note that confirmed it.
 
 ## 11. Troubleshooting
 

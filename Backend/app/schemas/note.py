@@ -12,3 +12,4 @@ class NoteCreate(BaseModel):
 class NoteProcessResponse(BaseModel):
     note_id: int
     cards: list[CardRead]
+    verified_closed_cards: list[CardRead]

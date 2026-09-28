@@ -19,18 +19,23 @@ class NoteProcessingService:
     async def process(self, note_text: str) -> NoteProcessResponse:
         async with self.session.begin():
             note = await self.notes.create(note_text)
+            open_cards = await self.cards.list_open()
             await self.agent.process(
                 note_text,
                 ProcessingContext(
                     session=self.session,
                     note_id=note.id,
+                    open_card_ids=frozenset(card.id for card in open_cards),
                     write_lock=asyncio.Lock(),
                 ),
+                open_cards,
             )
             note_id = note.id
 
         cards = await self.cards.list_for_note(note_id)
+        verified_closed_cards = await self.cards.list_verified_by_note(note_id)
         return NoteProcessResponse(
             note_id=note_id,
             cards=cards,
+            verified_closed_cards=verified_closed_cards,
         )
