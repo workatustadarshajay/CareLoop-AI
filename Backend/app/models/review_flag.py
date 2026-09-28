@@ -1,11 +1,12 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column
 
 from app.db.base import Base
 from app.models.card import CardType
+from app.models.note import Note
 
 
 class ReviewFlagKind(StrEnum):
@@ -57,3 +58,9 @@ class ReviewFlag(Base):
         nullable=False,
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# Ownership comes from the note, same as Card.patient_id.
+ReviewFlag.patient_id = column_property(
+    select(Note.patient_id).where(Note.id == ReviewFlag.note_id).scalar_subquery()
+)

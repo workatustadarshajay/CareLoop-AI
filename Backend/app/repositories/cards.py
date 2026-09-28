@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,12 +16,14 @@ class CardRepository:
         note_id: int,
         card_type: CardType,
         description: str,
+        due_at: datetime | None = None,
     ) -> Card:
         card = Card(
             note_id=note_id,
             type=card_type,
             description=description,
             status=CardStatus.OPEN,
+            due_at=due_at,
         )
         self.session.add(card)
         await self.session.flush()
@@ -44,9 +48,21 @@ class CardRepository:
         await self.session.flush()
         return cards
 
-    async def list_all(self) -> list[Card]:
+    async def list_all(self, patient_id: int | None = None) -> list[Card]:
+        query = select(Card).order_by(desc(Card.created_at), desc(Card.id))
+        if patient_id is not None:
+            query = query.where(Card.patient_id == patient_id)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def list_open_for_patient(self, patient_id: int) -> list[Card]:
         result = await self.session.execute(
-            select(Card).order_by(desc(Card.created_at), desc(Card.id))
+            select(Card)
+            .where(
+                Card.patient_id == patient_id,
+                Card.status.not_in([CardStatus.DONE, CardStatus.VERIFIED_CLOSED]),
+            )
+            .order_by(Card.id)
         )
         return list(result.scalars().all())
 

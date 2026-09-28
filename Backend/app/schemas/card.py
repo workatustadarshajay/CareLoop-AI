@@ -14,4 +14,7 @@ class CardRead(BaseModel):
     description: str
     description_plain: str | None = None
     status: CardStatus
+    risk_reason: str | None = None
+    due_at: datetime | None = None
+    patient_id: int | None = None
     created_at: datetime

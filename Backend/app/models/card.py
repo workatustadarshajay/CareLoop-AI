@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING
-from sqlalchemy import DateTime, Enum, ForeignKey, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, Enum, ForeignKey, String, func, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -57,6 +57,7 @@ class Card(Base):
         nullable=True,
         comment="Reason why this card is at risk"
     )
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -67,3 +68,8 @@ class Card(Base):
 
 
 from app.models.note import Note
+
+# Ownership comes from the note; loaded with every card row so no lazy-load in async code.
+Card.patient_id = column_property(
+    select(Note.patient_id).where(Note.id == Card.note_id).scalar_subquery()
+)

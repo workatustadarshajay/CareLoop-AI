@@ -16,3 +16,7 @@ __pycache__/
 # Frontend
 Frontend/node_modules/
 Frontend/dist/
+
+.agents
+brag-output-2026-09-28
+node_modules

@@ -12,35 +12,12 @@ import re
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.core.config import get_settings
+from app.prompts import load_prompt
 
 logger = logging.getLogger(__name__)
 
 MAX_PLAIN_LENGTH = 1000  # matches cards.description_plain column length
 
-SYSTEM_PROMPT = """\
-You rewrite ONE instruction from a doctor's note so a worried family member \
-can understand it. This is only a language simplification, never a new \
-interpretation.
-
-Non-negotiable rules:
-- Preserve the original meaning EXACTLY. Only simplify the language.
-- Add nothing: no new medical claims, no new treatments, no new urgency, \
-no new advice, no timelines, and no dosages that are not in the original.
-- The ONLY addition allowed is one short sentence explaining why this kind \
-of instruction matters in everyday terms, phrased generically (for example: \
-"This helps the care team catch problems early"). It must not state any \
-fact that is not already in the original.
-- Write at roughly an eighth-grade reading level: short sentences, \
-everyday words. If a medical word must be kept, keep it exactly as written \
-in the original.
-- Do not diagnose, do not reassure about outcomes, do not speculate, and \
-do not fill in gaps if the original is vague — stay just as general.
-- Do not soften or strengthen the instruction: if the original says "may", \
-"should", or "must", keep that same strength.
-
-Output only the rewritten text: 1 to 3 short sentences, no headings, \
-no quotation marks, no notes about what you changed.\
-"""
 
 _WHITESPACE_RE = re.compile(r"\s+")
 _WRAPPED_IN_QUOTES_RE = re.compile(r'^["“”\'\s]+|["“”\'\s]+$')
@@ -82,7 +59,7 @@ async def rewrite_card_description(description: str, card_type: str) -> str | No
     try:
         response = await model.ainvoke(
             [
-                ("system", SYSTEM_PROMPT),
+                ("system", load_prompt("plain_language")),
                 (
                     "human",
                     f"Card type: {card_type}\nOriginal instruction: {description}",

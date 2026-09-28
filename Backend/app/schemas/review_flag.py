@@ -11,6 +11,7 @@ class ReviewFlagRead(BaseModel):
 
     id: int
     note_id: int
+    patient_id: int | None = None
     kind: ReviewFlagKind
     status: ReviewFlagStatus
     reason: str

@@ -4,8 +4,9 @@ from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.agents.context import ProcessingContext
-from app.agents.tools import save_card
+from app.agents.tools import close_card, save_card
 from app.core.config import Settings
+from app.prompts import load_prompt
 
 
 class AgentConfigurationError(RuntimeError):
@@ -27,17 +28,9 @@ class NoteAgent:
         )
         self._agent = create_agent(
             model=model,
-            tools=[save_card],
+            tools=[save_card, close_card],
             context_schema=ProcessingContext,
-            system_prompt=(
-                "You extract actionable items from a doctor's note. "
-                "Call save_card exactly once for every distinct actionable item "
-                "you find, and do not combine multiple items into one call. "
-                "Use only these types: medication, test, referral, next_visit, or general_task. "
-                "Keep each description short and faithful to the note. "
-                "Do not invent details, and do not return an extracted list instead of calling the tool. "
-                "When the cards are saved, finish with a brief confirmation."
-            ),
+            system_prompt=load_prompt("note_agent"),
         )
 
     async def process(self, note_text: str, context: ProcessingContext) -> None:

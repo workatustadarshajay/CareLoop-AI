@@ -1,66 +1,380 @@
 {
+  "_readme": "Care-gap recommendations. When a note mentions a diagnosis (name or alias, whole phrase, case-insensitive) CareLoop checks each expected_item against the cards saved from that note and flags the ones nothing covers. Edit freely; the backend reloads this file on restart. card_type must be one of: medication, test, referral, next_visit, general_task.",
   "diagnoses": [
     {
       "name": "heart failure",
-      "aliases": ["heart failure", "congestive heart failure", "CHF", "HFrEF", "HFpEF"],
+      "aliases": ["heart failure", "congestive heart failure", "CHF", "HFrEF", "HFpEF", "cardiac failure"],
       "expected_items": [
-        {
-          "label": "weight-monitoring follow-up",
-          "card_type": "general_task",
-          "card_description": "Monitor weight daily and report a gain of more than 2 kg in a week"
-        },
-        {
-          "label": "medication reconciliation",
-          "card_type": "medication",
-          "card_description": "Reconcile current medications against the heart failure regimen"
-        },
-        {
-          "label": "cardiology follow-up within 2 weeks",
-          "card_type": "referral",
-          "card_description": "Cardiology follow-up within 2 weeks"
-        }
+        {"label": "daily weight monitoring", "card_type": "general_task", "card_description": "Monitor weight daily and report a gain of more than 2 kg in a week"},
+        {"label": "medication reconciliation", "card_type": "medication", "card_description": "Reconcile current medications against the heart failure regimen"},
+        {"label": "cardiology follow-up within 2 weeks", "card_type": "referral", "card_description": "Cardiology follow-up within 2 weeks"},
+        {"label": "echocardiogram", "card_type": "test", "card_description": "Echocardiogram to assess ejection fraction"},
+        {"label": "BNP, electrolytes and kidney function blood test", "card_type": "test", "card_description": "Blood test for BNP, electrolytes and kidney function"},
+        {"label": "low-salt diet and fluid limit", "card_type": "general_task", "card_description": "Follow a low-salt diet and the daily fluid limit as advised"},
+        {"label": "symptom red flags to report", "card_type": "general_task", "card_description": "Seek care for worsening breathlessness, swelling, or needing more pillows to sleep"},
+        {"label": "flu and pneumococcal vaccination", "card_type": "general_task", "card_description": "Check flu and pneumococcal vaccinations are up to date"},
+        {"label": "early follow-up visit after discharge", "card_type": "next_visit", "card_description": "Follow-up visit within 7 days of hospital discharge"}
       ]
     },
     {
       "name": "type 2 diabetes",
-      "aliases": ["type 2 diabetes", "type II diabetes", "T2DM", "diabetes mellitus type 2"],
+      "aliases": ["type 2 diabetes", "type II diabetes", "T2DM", "diabetes mellitus type 2", "diabetes", "diabetic"],
       "expected_items": [
-        {
-          "label": "HbA1c test",
-          "card_type": "test",
-          "card_description": "Check HbA1c"
-        },
-        {
-          "label": "diabetic eye exam referral",
-          "card_type": "referral",
-          "card_description": "Referral for a diabetic retinal eye exam"
-        },
-        {
-          "label": "foot examination",
-          "card_type": "general_task",
-          "card_description": "Diabetic foot examination"
-        }
+        {"label": "HbA1c test", "card_type": "test", "card_description": "Check HbA1c"},
+        {"label": "diabetic eye exam referral", "card_type": "referral", "card_description": "Referral for a diabetic retinal eye exam"},
+        {"label": "foot examination", "card_type": "general_task", "card_description": "Diabetic foot examination"},
+        {"label": "kidney function and urine albumin test", "card_type": "test", "card_description": "Kidney function blood test and urine albumin-to-creatinine ratio"},
+        {"label": "cholesterol (lipid) panel", "card_type": "test", "card_description": "Fasting lipid panel"},
+        {"label": "blood pressure check", "card_type": "general_task", "card_description": "Check blood pressure at each visit"},
+        {"label": "diabetes education or dietitian referral", "card_type": "referral", "card_description": "Referral to diabetes education or a dietitian"},
+        {"label": "home glucose monitoring", "card_type": "general_task", "card_description": "Monitor blood glucose at home as instructed and keep a log"},
+        {"label": "hypoglycaemia safety advice", "card_type": "general_task", "card_description": "Know the signs of low blood sugar and how to treat it"},
+        {"label": "diabetes follow-up visit in 3 months", "card_type": "next_visit", "card_description": "Diabetes follow-up visit in 3 months"}
       ]
     },
     {
       "name": "hypertension",
-      "aliases": ["hypertension", "high blood pressure", "HTN"],
+      "aliases": ["hypertension", "high blood pressure", "HTN", "elevated blood pressure"],
       "expected_items": [
-        {
-          "label": "home blood pressure monitoring",
-          "card_type": "general_task",
-          "card_description": "Monitor blood pressure at home and keep a log"
-        },
-        {
-          "label": "kidney function blood test",
-          "card_type": "test",
-          "card_description": "Basic metabolic panel to check kidney function and electrolytes"
-        },
-        {
-          "label": "blood pressure follow-up visit",
-          "card_type": "next_visit",
-          "card_description": "Follow-up visit to recheck blood pressure"
-        }
+        {"label": "home blood pressure monitoring", "card_type": "general_task", "card_description": "Monitor blood pressure at home and keep a log"},
+        {"label": "kidney function and electrolytes blood test", "card_type": "test", "card_description": "Basic metabolic panel to check kidney function and electrolytes"},
+        {"label": "blood pressure follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit to recheck blood pressure in 2 to 4 weeks"},
+        {"label": "cholesterol (lipid) panel", "card_type": "test", "card_description": "Fasting lipid panel"},
+        {"label": "ECG", "card_type": "test", "card_description": "Resting ECG"},
+        {"label": "urine test for protein", "card_type": "test", "card_description": "Urinalysis to check for protein"},
+        {"label": "lifestyle changes: salt, exercise, alcohol, weight", "card_type": "general_task", "card_description": "Reduce salt, exercise regularly, limit alcohol and work towards a healthy weight"},
+        {"label": "medication adherence and side-effect review", "card_type": "medication", "card_description": "Review blood pressure medication adherence and side effects"}
+      ]
+    },
+    {
+      "name": "asthma",
+      "aliases": ["asthma", "asthmatic", "asthma exacerbation", "asthma attack"],
+      "expected_items": [
+        {"label": "written asthma action plan", "card_type": "general_task", "card_description": "Review and update the written asthma action plan"},
+        {"label": "inhaler technique check", "card_type": "general_task", "card_description": "Check inhaler technique and spacer use"},
+        {"label": "controller (preventer) inhaler", "card_type": "medication", "card_description": "Continue daily controller inhaler as prescribed"},
+        {"label": "reliever inhaler available", "card_type": "medication", "card_description": "Keep a reliever inhaler available at all times"},
+        {"label": "spirometry or peak flow", "card_type": "test", "card_description": "Spirometry or peak flow measurement"},
+        {"label": "trigger avoidance and smoking cessation", "card_type": "general_task", "card_description": "Avoid known triggers; stop smoking and avoid second-hand smoke"},
+        {"label": "annual flu vaccination", "card_type": "general_task", "card_description": "Annual flu vaccination"},
+        {"label": "asthma review visit", "card_type": "next_visit", "card_description": "Asthma review visit in 4 to 6 weeks"}
+      ]
+    },
+    {
+      "name": "COPD",
+      "aliases": ["COPD", "chronic obstructive pulmonary disease", "emphysema", "chronic bronchitis"],
+      "expected_items": [
+        {"label": "spirometry", "card_type": "test", "card_description": "Spirometry to confirm and stage COPD"},
+        {"label": "smoking cessation support", "card_type": "referral", "card_description": "Referral to smoking cessation support"},
+        {"label": "inhaler technique check", "card_type": "general_task", "card_description": "Check inhaler technique"},
+        {"label": "pulmonary rehabilitation referral", "card_type": "referral", "card_description": "Referral to pulmonary rehabilitation"},
+        {"label": "flu and pneumococcal vaccination", "card_type": "general_task", "card_description": "Check flu and pneumococcal vaccinations are up to date"},
+        {"label": "oxygen saturation check", "card_type": "test", "card_description": "Check resting oxygen saturation"},
+        {"label": "exacerbation action plan", "card_type": "general_task", "card_description": "Agree a written plan for what to do when symptoms flare up"},
+        {"label": "respiratory follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit to review symptoms and inhalers"}
+      ]
+    },
+    {
+      "name": "chronic kidney disease",
+      "aliases": ["chronic kidney disease", "CKD", "renal impairment", "kidney disease", "reduced kidney function"],
+      "expected_items": [
+        {"label": "kidney function (eGFR) blood test", "card_type": "test", "card_description": "Blood test for creatinine and eGFR"},
+        {"label": "urine albumin-to-creatinine ratio", "card_type": "test", "card_description": "Urine albumin-to-creatinine ratio"},
+        {"label": "blood pressure control", "card_type": "general_task", "card_description": "Monitor and control blood pressure"},
+        {"label": "medication dose review for kidney function", "card_type": "medication", "card_description": "Review all medications and doses for kidney function; avoid NSAIDs"},
+        {"label": "electrolytes, haemoglobin and bone profile", "card_type": "test", "card_description": "Blood test for potassium, haemoglobin, calcium and phosphate"},
+        {"label": "nephrology referral if advanced or progressing", "card_type": "referral", "card_description": "Nephrology referral if kidney function is advanced or declining"},
+        {"label": "dietary advice on salt and protein", "card_type": "referral", "card_description": "Dietitian advice on salt, potassium and protein intake"},
+        {"label": "kidney follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit to review kidney results"}
+      ]
+    },
+    {
+      "name": "atrial fibrillation",
+      "aliases": ["atrial fibrillation", "AF", "AFib", "A-fib", "irregular heart rhythm"],
+      "expected_items": [
+        {"label": "stroke risk assessment and anticoagulation decision", "card_type": "medication", "card_description": "Assess stroke risk and start or review anticoagulation"},
+        {"label": "ECG", "card_type": "test", "card_description": "12-lead ECG"},
+        {"label": "echocardiogram", "card_type": "test", "card_description": "Echocardiogram"},
+        {"label": "thyroid function, kidney function and blood count", "card_type": "test", "card_description": "Blood test for thyroid function, kidney function and full blood count"},
+        {"label": "rate or rhythm control medication", "card_type": "medication", "card_description": "Review rate or rhythm control medication"},
+        {"label": "bleeding and stroke warning signs", "card_type": "general_task", "card_description": "Know the warning signs of stroke and of bleeding on anticoagulants"},
+        {"label": "cardiology follow-up", "card_type": "referral", "card_description": "Cardiology follow-up"},
+        {"label": "limit alcohol and caffeine", "card_type": "general_task", "card_description": "Limit alcohol and caffeine"}
+      ]
+    },
+    {
+      "name": "coronary artery disease",
+      "aliases": ["coronary artery disease", "CAD", "ischaemic heart disease", "ischemic heart disease", "angina", "myocardial infarction", "heart attack", "MI", "NSTEMI", "STEMI", "acute coronary syndrome"],
+      "expected_items": [
+        {"label": "antiplatelet therapy", "card_type": "medication", "card_description": "Continue antiplatelet therapy as prescribed"},
+        {"label": "high-intensity statin", "card_type": "medication", "card_description": "Start or continue a high-intensity statin"},
+        {"label": "beta blocker and ACE inhibitor review", "card_type": "medication", "card_description": "Review beta blocker and ACE inhibitor / ARB"},
+        {"label": "nitrate for chest pain and when to call emergency services", "card_type": "general_task", "card_description": "Carry sublingual nitrate; call emergency services for chest pain not relieved within minutes"},
+        {"label": "cardiac rehabilitation referral", "card_type": "referral", "card_description": "Referral to cardiac rehabilitation"},
+        {"label": "lipid panel", "card_type": "test", "card_description": "Fasting lipid panel"},
+        {"label": "blood pressure and diabetes control", "card_type": "general_task", "card_description": "Control blood pressure and blood sugar"},
+        {"label": "smoking cessation", "card_type": "general_task", "card_description": "Stop smoking; offer cessation support"},
+        {"label": "cardiology follow-up within 4 to 6 weeks", "card_type": "referral", "card_description": "Cardiology follow-up within 4 to 6 weeks"}
+      ]
+    },
+    {
+      "name": "stroke",
+      "aliases": ["stroke", "CVA", "cerebrovascular accident", "TIA", "transient ischaemic attack", "transient ischemic attack", "mini-stroke"],
+      "expected_items": [
+        {"label": "antiplatelet or anticoagulant therapy", "card_type": "medication", "card_description": "Start or continue antiplatelet or anticoagulant therapy as prescribed"},
+        {"label": "statin", "card_type": "medication", "card_description": "Start or continue a statin"},
+        {"label": "blood pressure control", "card_type": "general_task", "card_description": "Monitor and control blood pressure"},
+        {"label": "carotid imaging", "card_type": "test", "card_description": "Carotid ultrasound or angiography"},
+        {"label": "heart rhythm monitoring for atrial fibrillation", "card_type": "test", "card_description": "ECG and rhythm monitoring to look for atrial fibrillation"},
+        {"label": "rehabilitation referral", "card_type": "referral", "card_description": "Referral to physiotherapy, occupational therapy or speech therapy as needed"},
+        {"label": "swallow assessment", "card_type": "general_task", "card_description": "Swallow assessment before eating or drinking if not already done"},
+        {"label": "stroke warning signs (FAST)", "card_type": "general_task", "card_description": "Teach FAST stroke warning signs and to call emergency services"},
+        {"label": "driving advice", "card_type": "general_task", "card_description": "Advise on not driving until cleared"},
+        {"label": "neurology or stroke clinic follow-up", "card_type": "referral", "card_description": "Stroke clinic or neurology follow-up"}
+      ]
+    },
+    {
+      "name": "depression",
+      "aliases": ["depression", "major depressive disorder", "MDD", "depressive episode", "low mood"],
+      "expected_items": [
+        {"label": "suicide and safety risk assessment", "card_type": "general_task", "card_description": "Assess suicide risk and agree a safety plan with crisis contact numbers"},
+        {"label": "depression severity questionnaire (PHQ-9)", "card_type": "test", "card_description": "Complete a PHQ-9 depression questionnaire"},
+        {"label": "antidepressant review", "card_type": "medication", "card_description": "Start or review antidepressant medication and side effects"},
+        {"label": "talking therapy referral", "card_type": "referral", "card_description": "Referral for cognitive behavioural therapy or counselling"},
+        {"label": "thyroid and blood count screen", "card_type": "test", "card_description": "Blood test for thyroid function and full blood count"},
+        {"label": "sleep, activity and alcohol advice", "card_type": "general_task", "card_description": "Advice on sleep, physical activity and limiting alcohol"},
+        {"label": "follow-up within 2 to 4 weeks", "card_type": "next_visit", "card_description": "Follow-up visit within 2 to 4 weeks of starting treatment"}
+      ]
+    },
+    {
+      "name": "anxiety",
+      "aliases": ["anxiety", "generalised anxiety disorder", "generalized anxiety disorder", "GAD", "panic attacks", "panic disorder"],
+      "expected_items": [
+        {"label": "anxiety questionnaire (GAD-7)", "card_type": "test", "card_description": "Complete a GAD-7 anxiety questionnaire"},
+        {"label": "talking therapy referral", "card_type": "referral", "card_description": "Referral for cognitive behavioural therapy"},
+        {"label": "medication review", "card_type": "medication", "card_description": "Review anxiety medication if prescribed"},
+        {"label": "thyroid function test", "card_type": "test", "card_description": "Thyroid function blood test"},
+        {"label": "caffeine, alcohol and sleep advice", "card_type": "general_task", "card_description": "Reduce caffeine and alcohol; regular sleep routine"},
+        {"label": "follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit in 4 weeks"}
+      ]
+    },
+    {
+      "name": "hypothyroidism",
+      "aliases": ["hypothyroidism", "underactive thyroid", "low thyroid", "Hashimoto"],
+      "expected_items": [
+        {"label": "levothyroxine", "card_type": "medication", "card_description": "Start or adjust levothyroxine"},
+        {"label": "TSH recheck in 6 to 8 weeks", "card_type": "test", "card_description": "Repeat TSH blood test in 6 to 8 weeks"},
+        {"label": "how to take levothyroxine", "card_type": "general_task", "card_description": "Take levothyroxine on an empty stomach, apart from calcium, iron and antacids"},
+        {"label": "lipid panel", "card_type": "test", "card_description": "Fasting lipid panel"},
+        {"label": "thyroid follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit after repeat thyroid test"}
+      ]
+    },
+    {
+      "name": "hyperlipidemia",
+      "aliases": ["hyperlipidemia", "hyperlipidaemia", "high cholesterol", "dyslipidemia", "dyslipidaemia", "hypercholesterolemia"],
+      "expected_items": [
+        {"label": "statin", "card_type": "medication", "card_description": "Start or continue a statin"},
+        {"label": "repeat lipid panel in 6 to 12 weeks", "card_type": "test", "card_description": "Repeat lipid panel 6 to 12 weeks after starting or changing treatment"},
+        {"label": "liver function test", "card_type": "test", "card_description": "Liver function blood test"},
+        {"label": "cardiovascular risk assessment", "card_type": "general_task", "card_description": "Calculate 10-year cardiovascular risk"},
+        {"label": "diet and exercise advice", "card_type": "general_task", "card_description": "Heart-healthy diet and regular exercise"},
+        {"label": "muscle symptom check", "card_type": "general_task", "card_description": "Report unexplained muscle pain or weakness on statins"}
+      ]
+    },
+    {
+      "name": "osteoporosis",
+      "aliases": ["osteoporosis", "osteopenia", "low bone density", "fragility fracture"],
+      "expected_items": [
+        {"label": "bone density scan (DEXA)", "card_type": "test", "card_description": "DEXA bone density scan"},
+        {"label": "calcium and vitamin D", "card_type": "medication", "card_description": "Ensure adequate calcium and vitamin D intake"},
+        {"label": "bisphosphonate or other bone medication", "card_type": "medication", "card_description": "Start or review bisphosphonate or other bone-protective medication"},
+        {"label": "vitamin D and calcium blood test", "card_type": "test", "card_description": "Blood test for vitamin D, calcium and kidney function"},
+        {"label": "falls risk assessment", "card_type": "general_task", "card_description": "Assess falls risk and home hazards"},
+        {"label": "weight-bearing exercise", "card_type": "general_task", "card_description": "Regular weight-bearing and balance exercise"},
+        {"label": "dental check before bisphosphonate", "card_type": "referral", "card_description": "Dental check before starting bisphosphonate"}
+      ]
+    },
+    {
+      "name": "pneumonia",
+      "aliases": ["pneumonia", "community-acquired pneumonia", "CAP", "chest infection", "lower respiratory tract infection"],
+      "expected_items": [
+        {"label": "antibiotic course", "card_type": "medication", "card_description": "Complete the full antibiotic course as prescribed"},
+        {"label": "chest X-ray", "card_type": "test", "card_description": "Chest X-ray"},
+        {"label": "follow-up chest X-ray at 6 weeks if indicated", "card_type": "test", "card_description": "Repeat chest X-ray in 6 weeks if smoker, over 50, or symptoms persist"},
+        {"label": "review within 48 to 72 hours", "card_type": "next_visit", "card_description": "Review within 48 to 72 hours to check response to treatment"},
+        {"label": "warning signs to seek urgent care", "card_type": "general_task", "card_description": "Seek urgent care for worsening breathlessness, confusion, chest pain or high fever"},
+        {"label": "rest, fluids and fever control", "card_type": "general_task", "card_description": "Rest, drink fluids and use paracetamol for fever"},
+        {"label": "smoking cessation and vaccination", "card_type": "general_task", "card_description": "Stop smoking; check flu and pneumococcal vaccination"}
+      ]
+    },
+    {
+      "name": "venous thromboembolism",
+      "aliases": ["venous thromboembolism", "VTE", "deep vein thrombosis", "DVT", "pulmonary embolism", "PE", "blood clot"],
+      "expected_items": [
+        {"label": "anticoagulation", "card_type": "medication", "card_description": "Start anticoagulation and confirm the planned duration"},
+        {"label": "anticoagulant bleeding advice", "card_type": "general_task", "card_description": "Know bleeding warning signs and avoid NSAIDs while anticoagulated"},
+        {"label": "baseline blood count, kidney and liver function", "card_type": "test", "card_description": "Blood test for full blood count, kidney and liver function before anticoagulation"},
+        {"label": "imaging to confirm clot", "card_type": "test", "card_description": "Doppler ultrasound or CT pulmonary angiogram"},
+        {"label": "provoking factor and cancer screen review", "card_type": "general_task", "card_description": "Review provoking factors and whether further cancer screening is needed"},
+        {"label": "anticoagulation clinic follow-up", "card_type": "referral", "card_description": "Anticoagulation clinic or haematology follow-up"},
+        {"label": "review at 3 months", "card_type": "next_visit", "card_description": "Review at 3 months to decide on continuing anticoagulation"}
+      ]
+    },
+    {
+      "name": "pregnancy",
+      "aliases": ["pregnancy", "pregnant", "antenatal", "prenatal", "gestation", "weeks gestation"],
+      "expected_items": [
+        {"label": "folic acid and prenatal vitamins", "card_type": "medication", "card_description": "Take folic acid and prenatal vitamins"},
+        {"label": "booking bloods and urine", "card_type": "test", "card_description": "Booking blood tests (blood group, haemoglobin, infection screen) and urine test"},
+        {"label": "dating and anomaly ultrasound", "card_type": "test", "card_description": "Dating ultrasound and 20-week anomaly scan"},
+        {"label": "blood pressure and urine protein each visit", "card_type": "general_task", "card_description": "Check blood pressure and urine protein at every antenatal visit"},
+        {"label": "gestational diabetes screening", "card_type": "test", "card_description": "Glucose tolerance test at 24 to 28 weeks"},
+        {"label": "midwife or obstetric booking", "card_type": "referral", "card_description": "Booking appointment with midwife or obstetric team"},
+        {"label": "medication safety review", "card_type": "medication", "card_description": "Review all medications for safety in pregnancy"},
+        {"label": "flu and whooping cough vaccination", "card_type": "general_task", "card_description": "Flu and pertussis vaccination in pregnancy"},
+        {"label": "next antenatal visit", "card_type": "next_visit", "card_description": "Next antenatal visit as per schedule"}
+      ]
+    },
+    {
+      "name": "post-operative care",
+      "aliases": ["post-operative", "postoperative", "post-op", "after surgery", "surgery", "operation", "surgical procedure"],
+      "expected_items": [
+        {"label": "wound care instructions", "card_type": "general_task", "card_description": "Keep the wound clean and dry; follow dressing instructions"},
+        {"label": "infection warning signs", "card_type": "general_task", "card_description": "Seek care for fever, redness, swelling, pus or increasing pain at the wound"},
+        {"label": "pain relief plan", "card_type": "medication", "card_description": "Take pain relief as prescribed and step down as pain improves"},
+        {"label": "clot prevention", "card_type": "general_task", "card_description": "Stay mobile; take clot-prevention medication or wear stockings if prescribed"},
+        {"label": "activity and lifting restrictions", "card_type": "general_task", "card_description": "Follow activity, lifting and driving restrictions"},
+        {"label": "surgical follow-up visit", "card_type": "next_visit", "card_description": "Surgical follow-up visit in 1 to 2 weeks"},
+        {"label": "suture or staple removal", "card_type": "general_task", "card_description": "Suture or staple removal as scheduled"},
+        {"label": "physiotherapy referral", "card_type": "referral", "card_description": "Physiotherapy referral if needed for recovery"}
+      ]
+    },
+    {
+      "name": "obesity",
+      "aliases": ["obesity", "obese", "overweight", "BMI over 30", "weight management"],
+      "expected_items": [
+        {"label": "BMI and waist measurement", "card_type": "general_task", "card_description": "Record BMI and waist circumference"},
+        {"label": "diabetes and lipid screening", "card_type": "test", "card_description": "HbA1c and fasting lipid panel"},
+        {"label": "blood pressure check", "card_type": "general_task", "card_description": "Check blood pressure"},
+        {"label": "dietitian or weight-management referral", "card_type": "referral", "card_description": "Referral to dietitian or weight-management programme"},
+        {"label": "physical activity goal", "card_type": "general_task", "card_description": "Agree a realistic physical activity goal"},
+        {"label": "sleep apnoea screening", "card_type": "general_task", "card_description": "Screen for sleep apnoea symptoms"},
+        {"label": "weight follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit in 4 to 8 weeks to review progress"}
+      ]
+    },
+    {
+      "name": "migraine",
+      "aliases": ["migraine", "migraines", "migraine headache"],
+      "expected_items": [
+        {"label": "headache diary", "card_type": "general_task", "card_description": "Keep a headache diary of triggers, frequency and medication use"},
+        {"label": "acute treatment plan", "card_type": "medication", "card_description": "Acute treatment plan (e.g. triptan or NSAID) and limit to avoid medication-overuse headache"},
+        {"label": "preventive medication if frequent", "card_type": "medication", "card_description": "Consider preventive medication if migraines are frequent"},
+        {"label": "red-flag symptoms", "card_type": "general_task", "card_description": "Seek urgent care for sudden severe headache, weakness, confusion or headache with fever"},
+        {"label": "trigger and lifestyle advice", "card_type": "general_task", "card_description": "Regular sleep, meals, hydration and trigger avoidance"},
+        {"label": "neurology referral if atypical or not improving", "card_type": "referral", "card_description": "Neurology referral if atypical features or no improvement"},
+        {"label": "review visit", "card_type": "next_visit", "card_description": "Review in 6 to 8 weeks"}
+      ]
+    },
+    {
+      "name": "epilepsy",
+      "aliases": ["epilepsy", "seizure", "seizures", "fit", "convulsion"],
+      "expected_items": [
+        {"label": "anti-seizure medication and adherence", "card_type": "medication", "card_description": "Take anti-seizure medication exactly as prescribed; do not stop suddenly"},
+        {"label": "EEG", "card_type": "test", "card_description": "EEG"},
+        {"label": "brain imaging (MRI)", "card_type": "test", "card_description": "Brain MRI"},
+        {"label": "neurology referral", "card_type": "referral", "card_description": "Neurology referral"},
+        {"label": "seizure safety and first-aid advice", "card_type": "general_task", "card_description": "Seizure safety at home (bathing, heights, cooking) and first aid for family"},
+        {"label": "driving restrictions", "card_type": "general_task", "card_description": "Advise on driving restrictions and reporting requirements"},
+        {"label": "seizure diary", "card_type": "general_task", "card_description": "Keep a seizure diary"},
+        {"label": "medication level or blood monitoring if required", "card_type": "test", "card_description": "Blood tests for medication level, liver function or blood count if required"}
+      ]
+    },
+    {
+      "name": "iron deficiency anemia",
+      "aliases": ["iron deficiency anemia", "iron deficiency anaemia", "anemia", "anaemia", "low haemoglobin", "low hemoglobin", "low iron"],
+      "expected_items": [
+        {"label": "iron supplementation", "card_type": "medication", "card_description": "Start oral iron supplementation"},
+        {"label": "ferritin and full blood count", "card_type": "test", "card_description": "Blood test for ferritin, iron studies and full blood count"},
+        {"label": "repeat blood count in 4 weeks", "card_type": "test", "card_description": "Repeat full blood count in 4 weeks to confirm response"},
+        {"label": "investigate the cause", "card_type": "general_task", "card_description": "Investigate the cause of iron deficiency (diet, bleeding, absorption)"},
+        {"label": "gastroenterology referral if indicated", "card_type": "referral", "card_description": "Gastroenterology referral for endoscopy if bleeding source suspected"},
+        {"label": "dietary iron advice", "card_type": "general_task", "card_description": "Iron-rich diet; take iron with vitamin C, apart from tea, coffee and calcium"}
+      ]
+    },
+    {
+      "name": "urinary tract infection",
+      "aliases": ["urinary tract infection", "UTI", "cystitis", "bladder infection", "pyelonephritis", "kidney infection"],
+      "expected_items": [
+        {"label": "antibiotic course", "card_type": "medication", "card_description": "Complete the antibiotic course as prescribed"},
+        {"label": "urine culture", "card_type": "test", "card_description": "Send urine for culture and sensitivity"},
+        {"label": "fluids and symptom relief", "card_type": "general_task", "card_description": "Drink plenty of fluids; pain relief as needed"},
+        {"label": "warning signs to seek care", "card_type": "general_task", "card_description": "Seek care for fever, back pain, vomiting or no improvement in 48 hours"},
+        {"label": "review if recurrent", "card_type": "next_visit", "card_description": "Review if infections recur to consider further investigation"}
+      ]
+    },
+    {
+      "name": "gout",
+      "aliases": ["gout", "gout flare", "gouty arthritis", "hyperuricaemia", "hyperuricemia"],
+      "expected_items": [
+        {"label": "acute flare treatment", "card_type": "medication", "card_description": "Anti-inflammatory or colchicine for the acute flare as prescribed"},
+        {"label": "uric acid blood test", "card_type": "test", "card_description": "Serum uric acid 2 to 4 weeks after the flare"},
+        {"label": "kidney function test", "card_type": "test", "card_description": "Kidney function blood test"},
+        {"label": "urate-lowering therapy if recurrent", "card_type": "medication", "card_description": "Consider urate-lowering therapy (e.g. allopurinol) if flares recur"},
+        {"label": "diet, alcohol and hydration advice", "card_type": "general_task", "card_description": "Limit alcohol and purine-rich foods; stay well hydrated"},
+        {"label": "medication review for triggers", "card_type": "medication", "card_description": "Review diuretics and other medications that raise uric acid"},
+        {"label": "follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit in 4 weeks"}
+      ]
+    },
+    {
+      "name": "low back pain",
+      "aliases": ["low back pain", "lower back pain", "back pain", "lumbago", "sciatica"],
+      "expected_items": [
+        {"label": "red-flag symptoms", "card_type": "general_task", "card_description": "Seek urgent care for bladder or bowel problems, numbness between the legs, fever or progressive weakness"},
+        {"label": "stay active", "card_type": "general_task", "card_description": "Stay active and avoid prolonged bed rest"},
+        {"label": "pain relief plan", "card_type": "medication", "card_description": "Short course of pain relief as prescribed"},
+        {"label": "physiotherapy referral", "card_type": "referral", "card_description": "Physiotherapy referral if not improving in 2 to 4 weeks"},
+        {"label": "imaging only if red flags", "card_type": "test", "card_description": "Imaging only if red-flag features or no improvement after 6 weeks"},
+        {"label": "review visit", "card_type": "next_visit", "card_description": "Review in 4 to 6 weeks if not improving"}
+      ]
+    },
+    {
+      "name": "GERD",
+      "aliases": ["GERD", "GORD", "gastro-oesophageal reflux", "gastroesophageal reflux", "acid reflux", "heartburn", "reflux"],
+      "expected_items": [
+        {"label": "proton pump inhibitor course", "card_type": "medication", "card_description": "Proton pump inhibitor course for 4 to 8 weeks then review"},
+        {"label": "lifestyle measures", "card_type": "general_task", "card_description": "Smaller meals, avoid late eating, raise the head of the bed, limit alcohol and trigger foods"},
+        {"label": "alarm symptoms", "card_type": "general_task", "card_description": "Seek review for difficulty swallowing, weight loss, vomiting blood or black stools"},
+        {"label": "H. pylori test if indicated", "card_type": "test", "card_description": "H. pylori test if dyspepsia"},
+        {"label": "endoscopy referral if alarm features or persistent", "card_type": "referral", "card_description": "Gastroenterology referral for endoscopy if alarm features or symptoms persist"},
+        {"label": "review visit", "card_type": "next_visit", "card_description": "Review after the treatment course to step down medication"}
+      ]
+    },
+    {
+      "name": "dementia",
+      "aliases": ["dementia", "Alzheimer", "Alzheimer's", "cognitive impairment", "memory loss"],
+      "expected_items": [
+        {"label": "cognitive assessment", "card_type": "test", "card_description": "Formal cognitive assessment (e.g. MoCA or MMSE)"},
+        {"label": "reversible-cause blood tests", "card_type": "test", "card_description": "Blood tests for thyroid, B12, folate, calcium, glucose and full blood count"},
+        {"label": "brain imaging", "card_type": "test", "card_description": "Brain CT or MRI"},
+        {"label": "memory clinic referral", "card_type": "referral", "card_description": "Memory clinic or geriatrics referral"},
+        {"label": "medication review for cognition", "card_type": "medication", "card_description": "Review medications that can worsen confusion"},
+        {"label": "safety and driving assessment", "card_type": "general_task", "card_description": "Assess home safety and fitness to drive"},
+        {"label": "carer support and advance care planning", "card_type": "general_task", "card_description": "Carer support information and start advance care planning"},
+        {"label": "follow-up visit", "card_type": "next_visit", "card_description": "Follow-up visit to review results and plan"}
+      ]
+    },
+    {
+      "name": "cancer",
+      "aliases": ["cancer", "malignancy", "carcinoma", "tumour", "tumor", "oncology", "chemotherapy", "radiotherapy"],
+      "expected_items": [
+        {"label": "oncology referral or follow-up", "card_type": "referral", "card_description": "Oncology referral or follow-up appointment"},
+        {"label": "staging or surveillance imaging", "card_type": "test", "card_description": "Staging or surveillance imaging as planned"},
+        {"label": "blood count and biochemistry before treatment", "card_type": "test", "card_description": "Full blood count, kidney and liver function before each treatment cycle"},
+        {"label": "fever and infection warning signs", "card_type": "general_task", "card_description": "Seek urgent care for fever or infection signs during treatment"},
+        {"label": "pain and symptom management", "card_type": "medication", "card_description": "Review pain relief and anti-nausea medication"},
+        {"label": "nutrition support", "card_type": "referral", "card_description": "Dietitian referral for weight loss or poor appetite"},
+        {"label": "psychological and social support", "card_type": "general_task", "card_description": "Offer psychological support and social care information"},
+        {"label": "next treatment or review date", "card_type": "next_visit", "card_description": "Next treatment or review appointment"}
       ]
     }
   ]

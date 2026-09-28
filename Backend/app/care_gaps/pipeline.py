@@ -3,7 +3,7 @@ import logging
 from collections.abc import Sequence
 
 from app.care_gaps.checklist import Diagnosis, ExpectedItem, load_checklist
-from app.care_gaps.coverage import build_coverage_model, is_item_covered
+from app.care_gaps.coverage import build_coverage_model, covered_items
 from app.care_gaps.diagnosis import detect_diagnoses
 from app.core.config import get_settings
 from app.db.session import async_session_factory
@@ -28,9 +28,12 @@ async def run_care_gap_check(note_id: int, note_text: str, cards: Sequence[Card]
 
         descriptions = [card.description for card in cards]
         model = build_coverage_model(get_settings())
-        expected = [(diagnosis, item) for diagnosis in matched for item in diagnosis.expected_items]
-        covered = await asyncio.gather(
-            *(is_item_covered(item.label, descriptions, model) for _, item in expected)
+        # One model call per matched diagnosis, checking all of its expected items at once.
+        covered_per_diagnosis = await asyncio.gather(
+            *(
+                covered_items([item.label for item in diagnosis.expected_items], descriptions, model)
+                for diagnosis in matched
+            )
         )
 
         flags = [
@@ -43,8 +46,9 @@ async def run_care_gap_check(note_id: int, note_text: str, cards: Sequence[Card]
                 card_type=item.card_type,
                 card_description=item.card_description,
             )
-            for (diagnosis, item), is_covered in zip(expected, covered)
-            if not is_covered
+            for diagnosis, covered in zip(matched, covered_per_diagnosis)
+            for item in diagnosis.expected_items
+            if item.label not in covered
         ]
         if flags:
             async with async_session_factory() as session, session.begin():

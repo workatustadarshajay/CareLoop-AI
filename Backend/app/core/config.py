@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3.8-flash"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     database_pool_size: int = 5
+    reminder_days: int = 3
     database_max_overflow: int = 10
 
     @property

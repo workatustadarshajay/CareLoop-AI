@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -11,6 +11,9 @@ from app.api.routes.cards import router as cards_router
 from app.api.routes.notes import router as notes_router
 from app.api.routes.dependencies import router as dependencies_router
 from app.api.routes.review_flags import router as review_flags_router
+from app.api.routes.auth import router as auth_router
+from app.api.routes.reminders import router as reminders_router
+from app.services.auth import current_account, doctor_account
 from app.core.config import get_settings
 from app.db.session import engine
 import app.plain_language  # noqa: F401  (registers Card listeners for plain-language descriptions)
@@ -30,8 +33,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
@@ -43,7 +46,12 @@ async def handle_agent_configuration_error(
     return JSONResponse(status_code=503, content={"detail": str(error)})
 
 
-app.include_router(notes_router, prefix="/api")
-app.include_router(cards_router, prefix="/api")
-app.include_router(review_flags_router, prefix="/api")
-app.include_router(dependencies_router, prefix="/api")
+# Every data route requires a login; the routers themselves stay auth-agnostic.
+logged_in = [Depends(current_account)]
+app.include_router(auth_router, prefix="/api")
+app.include_router(notes_router, prefix="/api", dependencies=logged_in)
+app.include_router(cards_router, prefix="/api", dependencies=logged_in)
+app.include_router(reminders_router, prefix="/api", dependencies=logged_in)
+# Recommendations (care-gap review flags) are approved/dismissed by doctors only.
+app.include_router(review_flags_router, prefix="/api", dependencies=[Depends(doctor_account)])
+app.include_router(dependencies_router, prefix="/api", dependencies=logged_in)

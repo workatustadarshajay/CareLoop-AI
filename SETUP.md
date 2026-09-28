@@ -175,8 +175,11 @@ Expected: `HTTP/1.1 201 Created` and a body with `note_id` and the saved `cards`
 
 ## 6. Use the app
 
-1. Open <http://localhost:5173>.
-2. Paste a doctor's note (up to 12,000 characters) into **Doctor's note**.
+1. Open <http://localhost:5173> and sign in. Test accounts (password `password` for all):
+   - `admin` — administrator: a patients-only screen (list, search, **+ New patient** which creates the patient and their login). No notes, cards or recommendations.
+   - `dr_smith` — doctor: sees every patient's cards (default: the first patient; **Choose patient…** opens a searchable list, or *All patients*), picks the patient when adding a note, can change a card's status or due date, and reviews **Recommendations**.
+   - `alice`, `bob` — patients: see only their own cards, plus a **Your reminders** list for cards due within `REMINDER_DAYS`.
+2. Paste a doctor's note (up to 12,000 characters) into **Doctor's note** (doctor) or a follow-up note such as "MRI completed" (patient). A follow-up that confirms an open card was done closes that card as `verified_closed` automatically.
 3. Click **Process note**. The button reads **Processing...** while Gemini works.
 4. A confirmation shows how many cards were saved. **Your cards** lists every card, newest first.
 
@@ -186,6 +189,35 @@ Each card shows:
 - a short description
 - a status (new cards are `open`)
 - a creation date
+
+### pgAdmin (database browser)
+
+pgAdmin starts with the database: `docker compose up -d` (or `docker compose up -d pgadmin` on its own).
+
+1. Open <http://localhost:5050>. It runs in desktop mode, so there is no pgAdmin login. (If you ever see one, use `admin@careloop.dev` / `admin`.)
+2. In the left tree open **Servers → CareLoop**. It is pre-registered from `pgadmin/servers.json` (host `db`, user `careloop`).
+3. The first time, pgAdmin asks for the database password: enter `careloop` and tick **Save password**.
+4. Browse **Databases → careloop → Schemas → public → Tables**. Useful ones: `cards`, `notes`, `patients`, `accounts`, `card_dependencies`, `reminders`, `review_flags`.
+5. Right-click a table → **View/Edit Data → All Rows**, or open **Tools → Query Tool** and run SQL, e.g. `SELECT id, status, due_at, description FROM cards ORDER BY id;`.
+
+Over VS Code Remote-SSH, forward port **5050** as well as 5173 (Ports panel → Forward a Port).
+
+### Recommendations
+
+When a doctor's note mentions a diagnosis from `Backend/app/care_gaps/checklist.json` (28 conditions, 5–10 expected items each), CareLoop checks which expected care items no card covers and flags them. Doctors see these under **Recommendations** (hidden by default — click **Show recommendations**) and can **Add as card** or **Dismiss** each one. Recommendations follow the patient chosen in **Choose patient…**.
+
+## 6a. Changing how CareLoop behaves (no code needed)
+
+| What you want to change | Where | Notes |
+|---|---|---|
+| Which diagnoses trigger recommendations, and what is recommended | `Backend/app/care_gaps/checklist.json` | Add a diagnosis with `name`, `aliases` (phrases matched in the note) and `expected_items`. `card_type` must be `medication`, `test`, `referral`, `next_visit` or `general_task`. Restart the backend. |
+| How the agent reads notes, dates items, closes cards | `Backend/app/prompts/note_agent.txt` | Plain text system prompt. Restart the backend. |
+| How strict the "already covered" check is | `Backend/app/prompts/coverage.txt` | One call per diagnosis; returns which items the cards cover. |
+| Plain-language wording rules | `Backend/app/prompts/plain_language.txt` | Keep the "add nothing" rules — they are a safety guarantee. |
+| Which Gemini model is used | `Backend/.env` → `GEMINI_MODEL` | Applies to the agent, coverage check and rewriter. |
+| How many days ahead patients get a reminder | `Backend/.env` → `REMINDER_DAYS` | Default 3. Reminders are generated when a patient opens the app. |
+| Add a patient | Log in as `admin` → **+ New patient** | Creates the patient and a patient login in one step. Doctors cannot do this. |
+| Test accounts / more logins | `Backend/alembic/versions/0005_accounts_reminders.py`, `0006_admin_account.py` (seeds) or pgAdmin → `accounts`, `patients` | Passwords are salted PBKDF2; to add a user via SQL, generate a hash with `uv run python -c "from app.services.auth import hash_password; print(hash_password('secret'))"` in `Backend/`. |
 
 ## 7. Working over VS Code Remote-SSH
 

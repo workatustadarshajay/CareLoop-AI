@@ -21,6 +21,8 @@ class Diagnosis(BaseModel):
 
 
 class Checklist(BaseModel):
+    model_config = {"extra": "ignore"}
+
     diagnoses: list[Diagnosis]
 
 
