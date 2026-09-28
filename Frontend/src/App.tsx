@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { CardDependencies } from './components/CardDependencies'
 import './App.css'
 
 type CardType = 'medication' | 'test' | 'referral' | 'next_visit' | 'general_task'
@@ -9,11 +10,24 @@ type Card = {
   note_id: number
   type: CardType
   description: string
-  status: 'open' | 'done' | 'verified_closed'
+  description_plain: string | null
+  status: 'open' | 'done' | 'at_risk' | 'blocked' | 'verified_closed'
+  risk_reason: string | null
   due_date: string | null
   created_at: string
   verified_at: string | null
   verified_by_note_id: number | null
+}
+
+type Dependency = {
+  upstream_card_id: number
+  upstream_card: {
+    id: number
+    description: string
+    status: string
+    type: string
+  }
+  reason: string | null
 }
 
 type NoteProcessResponse = {
@@ -53,6 +67,56 @@ function formatDate(value: string): string {
   }).format(new Date(dateValue))
 }
 
+function CardBody({
+  card,
+  onCardsChanged,
+}: {
+  card: Card
+  onCardsChanged: () => void
+}) {
+  const [showClinical, setShowClinical] = useState(false)
+  const [dependencies, setDependencies] = useState<Dependency[]>([])
+
+  const hasPlainVersion = card.description_plain !== null && card.description_plain !== ''
+
+  useEffect(() => {
+    // Fetch dependencies for this card
+    fetch(`${apiUrl}/cards/${card.id}/dependencies`)
+      .then(res => res.json())
+      .then(data => setDependencies(data.dependencies || []))
+      .catch(err => console.error('Error fetching dependencies:', err))
+  }, [card.id])
+
+  return (
+    <>
+      <p className="card-description">
+        {hasPlainVersion ? card.description_plain : card.description}
+      </p>
+      {hasPlainVersion && (
+        <div className="card-clinical-section">
+          <button
+            type="button"
+            className="card-toggle"
+            aria-expanded={showClinical}
+            onClick={() => setShowClinical((current) => !current)}
+          >
+            {showClinical ? 'Hide clinical wording' : 'Show clinical wording'}
+          </button>
+          {showClinical && <p className="card-clinical">{card.description}</p>}
+        </div>
+      )}
+
+      <CardDependencies
+          cardId={card.id}
+          dependencies={dependencies}
+          isAtRisk={card.status === 'at_risk'}
+          atRiskReason={card.risk_reason}
+          onDependencyCreated={onCardsChanged}
+          onDependencyDeleted={onCardsChanged}
+        />
+    </>
+  )
+}
 function App() {
   const [noteText, setNoteText] = useState('')
   const [cards, setCards] = useState<Card[]>([])
@@ -258,9 +322,19 @@ function App() {
                     <span aria-hidden="true" />
                     {typeLabels[card.type]}
                   </div>
-                  <p className="card-description">{card.description}</p>
+                  <CardBody
+                    card={card}
+                    onCardsChanged={() => {
+                      void fetch(`${apiUrl}/cards`)
+                        .then((response) => response.json() as Promise<Card[]>)
+                        .then(setCards)
+                    }}
+                  />
                   <div className="card-meta">
                     <span>{card.status.replace('_', ' ')}</span>
+                    {card.status === 'at_risk' && (
+                      <span className="risk-badge">At risk</span>
+                    )}
                     <time dateTime={card.due_date ?? card.created_at}>
                       {card.due_date ? `Due ${formatDate(card.due_date)}` : formatDate(card.created_at)}
                     </time>

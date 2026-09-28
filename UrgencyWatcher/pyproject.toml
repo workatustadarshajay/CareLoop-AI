@@ -1,0 +1,22 @@
+[project]
+name = "urgency-watcher"
+version = "0.1.0"
+description = "Polls a folder for .txt messages, classifies their urgency with laya, and stores the result in Postgres."
+requires-python = ">=3.13"
+dependencies = [
+    "laya>=0.3.20",
+    "psycopg[binary]>=3.2",
+    "torch>=2.0",
+]
+
+[tool.uv]
+package = false
+
+# CPU-only PyTorch: this host has no GPU, and the default build pulls several GB of CUDA libraries.
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

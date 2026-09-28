@@ -18,6 +18,8 @@ class CardType(StrEnum):
 class CardStatus(StrEnum):
     OPEN = "open"
     DONE = "done"
+    AT_RISK = "at_risk"
+    BLOCKED = "blocked"
     VERIFIED_CLOSED = "verified_closed"
 
 
@@ -40,6 +42,7 @@ class Card(Base):
         nullable=False,
     )
     description: Mapped[str] = mapped_column(String(500), nullable=False)
+    description_plain: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[CardStatus] = mapped_column(
         Enum(
@@ -50,6 +53,10 @@ class Card(Base):
         default=CardStatus.OPEN,
         server_default=CardStatus.OPEN.value,
         nullable=False,
+    )
+    risk_reason: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

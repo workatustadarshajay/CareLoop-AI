@@ -5,6 +5,7 @@ from langchain.tools import ToolRuntime, tool
 from app.agents.context import ProcessingContext
 from app.models.card import CardType
 from app.repositories.cards import CardRepository
+from app.services.dependency_service import DependencyService
 
 
 @tool
@@ -48,6 +49,8 @@ async def verify_card_completed(
             card_id,
             note_id=context.note_id,
         )
+        if card is not None:
+            await DependencyService(context.session).propagate_risk_updates(card.id)
 
     if card is None:
         raise ValueError(f"Card {card_id} is no longer open")

@@ -1,0 +1,4 @@
+.venv/
+.env
+# Incoming, processed, and failed messages may contain patient data.
+inbox/

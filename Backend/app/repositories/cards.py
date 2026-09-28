@@ -5,6 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.card import Card, CardStatus, CardType
 
+ACTIVE_CARD_STATUSES = (
+    CardStatus.OPEN,
+    CardStatus.AT_RISK,
+    CardStatus.BLOCKED,
+)
+
 
 class CardRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -65,7 +71,7 @@ class CardRepository:
     async def list_open(self) -> list[Card]:
         result = await self.session.execute(
             select(Card)
-            .where(Card.status == CardStatus.OPEN)
+            .where(Card.status.in_(ACTIVE_CARD_STATUSES))
             .order_by(Card.created_at, Card.id)
         )
         return list(result.scalars().all())
@@ -74,7 +80,7 @@ class CardRepository:
         result = await self.session.execute(
             select(Card)
             .where(
-                Card.status == CardStatus.OPEN,
+                Card.status.in_(ACTIVE_CARD_STATUSES),
                 Card.due_date.is_not(None),
                 Card.due_date <= cutoff,
             )
@@ -85,7 +91,7 @@ class CardRepository:
     async def verify_closed(self, card_id: int, *, note_id: int) -> Card | None:
         result = await self.session.execute(
             update(Card)
-            .where(Card.id == card_id, Card.status == CardStatus.OPEN)
+            .where(Card.id == card_id, Card.status.in_(ACTIVE_CARD_STATUSES))
             .values(
                 status=CardStatus.VERIFIED_CLOSED,
                 verified_at=datetime.now(timezone.utc),

@@ -12,6 +12,7 @@ class CardRead(BaseModel):
     note_id: int
     type: CardType
     description: str
+    description_plain: str | None = None
     due_date: date | None
     status: CardStatus
     created_at: datetime

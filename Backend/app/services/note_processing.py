@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.context import ProcessingContext
 from app.agents.note_agent import NoteAgent
+from app.care_gaps.pipeline import run_care_gap_check
 from app.repositories.cards import CardRepository
 from app.repositories.notes import NoteRepository
 from app.schemas.note import NoteProcessResponse
@@ -34,6 +35,7 @@ class NoteProcessingService:
 
         cards = await self.cards.list_for_note(note_id)
         verified_closed_cards = await self.cards.list_verified_by_note(note_id)
+        await run_care_gap_check(note_id, note_text, cards)
         return NoteProcessResponse(
             note_id=note_id,
             cards=cards,

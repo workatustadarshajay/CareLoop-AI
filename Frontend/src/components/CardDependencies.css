@@ -1,0 +1,99 @@
+.card-dependencies {
+  margin: 0 0 16px;
+}
+
+.risk-badge--at-risk {
+  display: block;
+  margin: 0 0 12px;
+}
+
+.risk-badge__icon {
+  margin-right: 6px;
+}
+
+.dependencies-section {
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: rgba(244, 247, 243, 0.65);
+}
+
+.dependencies-title {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font: 700 11px/1 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dependencies-empty,
+.dependency-item__reason,
+.error-message {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dependencies-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.dependency-item {
+  position: relative;
+  padding: 10px 34px 10px 10px;
+  background: var(--paper);
+}
+
+.dependency-item__main {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dependency-item__description {
+  font-size: 13px;
+}
+
+.dependency-item__status {
+  color: var(--accent);
+  font: 10px/1 var(--mono);
+}
+
+.dependency-item__delete-btn {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: auto;
+  padding: 4px 7px;
+}
+
+.dependencies-add-btn {
+  padding: 8px 10px;
+}
+
+.dependency-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.dependency-form input {
+  width: 100%;
+  padding: 10px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font: 14px/1.2 var(--body);
+}
+
+.dependency-form textarea {
+  min-height: 84px;
+}
+
+.dependency-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
