@@ -20,3 +20,6 @@ unpacked
 brag-output-2026-09-28
 node_modules
 .agents
+
+# MkDocs build output — regenerate with `mkdocs build`
+site/
