@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5676a1ef-0591-49db-9acd-9d6e326a2efa",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/308638@USTDEV.COM/Projects/CareLoop-AI/.archify/architecture-careloop-ai-20261007-092327/candidate.json",
+  "output": "/home/308638@USTDEV.COM/Projects/CareLoop-AI/.archify/architecture-careloop-ai-20261007-092327/careloop-ai-architecture.html",
+  "specification": {
+    "sha256": "825c4a7ed6a6b1f16fbdfd5dcb68975ba01b33d81d43028a6741bb35ea411146",
+    "bytes": 8669
+  },
+  "artifact": {
+    "sha256": "74eb70c74a9efaaffc9bb9294b526174b53bd4a9c4ae652a064bf23eb4798c96",
+    "bytes": 775161
+  }
+}

@@ -1,0 +1,57 @@
+site_name: CareLoop AI — POC review
+site_description: Healthcare Commitment Intelligence & Closed-Loop Care
+site_url: https://workatustadarshajay.github.io/CareLoop-AI/
+repo_url: https://github.com/workatustadarshajay/CareLoop-AI
+repo_name: workatustadarshajay/CareLoop-AI
+docs_dir: docs
+site_dir: site
+# False keeps every link predictable: page.md -> page.html, and the generated
+# architecture.html / slides/index.html stay at the paths the deck links to.
+use_directory_urls: false
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - search.suggest
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Link to this section
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+nav:
+  - Home: index.md
+  - Architecture: architecture-notes.md
+  - Interactive diagram: architecture.html
+  - Animated slideshow: slides/index.html
+  - Publishing: publishing.md
+extra:
+  generator: false
+copyright: CareLoop AI — UST Claude POC review, 7 October 2026

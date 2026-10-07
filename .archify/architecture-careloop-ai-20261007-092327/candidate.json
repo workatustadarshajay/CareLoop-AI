@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CareLoop AI — note to closed loop",
+    "output": ".archify/architecture-careloop-ai-20261007-092327/careloop-ai-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:workatustadarshajay/CareLoop-AI.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "8c092fbf90b3673274ef4f92105e967d64d9c507"
+    }
+  },
+  "components": [
+    {
+      "id": "ui_user",
+      "type": "external",
+      "label": "Clinician / patient",
+      "sublabel": "browser session",
+      "icon": "person",
+      "pos": [20, 270],
+      "size": [130, 64],
+      "sources": [{ "path": "Frontend/src/Landing.tsx", "line": 123, "label": "sign in" }]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "CareLoop web app",
+      "sublabel": "React 19 SPA · Vite :5173",
+      "tag": "/api/* proxied",
+      "pos": [210, 270],
+      "size": [180, 64],
+      "sources": [
+        { "path": "Frontend/src/App.tsx", "line": 763, "label": "cards, reminders, review" },
+        { "path": "Frontend/vite.config.ts", "line": 9, "label": "proxy to :8000" }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI API",
+      "sublabel": ":8000 · session-cookie auth",
+      "tag": "POST /api/notes/process",
+      "pos": [620, 270],
+      "size": [190, 84],
+      "sources": [
+        { "path": "Backend/app/main.py", "line": 31, "label": "app + routers" },
+        { "path": "Backend/app/api/routes/notes.py", "line": 26, "label": "process note endpoint" }
+      ]
+    },
+    {
+      "id": "note_agent",
+      "type": "backend",
+      "label": "Note agent",
+      "sublabel": "LangChain create_agent",
+      "tag": "save_card · close_card",
+      "pos": [620, 40],
+      "size": [190, 80],
+      "sources": [
+        { "path": "Backend/app/agents/note_agent.py", "line": 29, "label": "agent + tools" },
+        { "path": "Backend/app/agents/tools.py", "line": 21, "label": "save_card" },
+        { "path": "Backend/app/agents/tools.py", "line": 49, "label": "close_card + evidence" }
+      ]
+    },
+    {
+      "id": "gemini",
+      "type": "external",
+      "label": "Gemini API",
+      "sublabel": "gemini-3.8-flash",
+      "icon": "cloud",
+      "pos": [870, 40],
+      "size": [150, 64],
+      "sources": [{ "path": "Backend/app/core/config.py", "line": 16, "label": "model setting" }]
+    },
+    {
+      "id": "care_gaps",
+      "type": "backend",
+      "label": "Care-gap check",
+      "sublabel": "after the cards are saved",
+      "tag": "28-condition checklist",
+      "pos": [1100, 40],
+      "size": [190, 80],
+      "sources": [
+        { "path": "Backend/app/care_gaps/pipeline.py", "line": 26, "label": "run_care_gap_check" },
+        { "path": "Backend/app/care_gaps/checklist.json", "line": 1, "label": "diagnosis rules" }
+      ]
+    },
+    {
+      "id": "deps",
+      "type": "backend",
+      "label": "Dependency & risk",
+      "sublabel": "at_risk via card_dependencies",
+      "pos": [640, 470],
+      "size": [180, 72],
+      "sources": [
+        {
+          "path": "Backend/app/services/dependency_service.py",
+          "line": 136,
+          "label": "propagate_risk_updates"
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "PostgreSQL 16",
+      "sublabel": ":5432 · notes, cards, deps",
+      "tag": "review_flags · urgency.messages",
+      "pos": [930, 280],
+      "size": [200, 84],
+      "sources": [
+        { "path": "docker-compose.yml", "line": 3, "label": "postgres:16-alpine" },
+        {
+          "path": "Backend/alembic/versions/0001_create_notes_and_cards.py",
+          "line": 1,
+          "label": "notes and cards schema"
+        }
+      ]
+    },
+    {
+      "id": "mcp_host",
+      "type": "external",
+      "label": "MCP client",
+      "sublabel": "careloop_* tool loop",
+      "pos": [20, 470],
+      "size": [170, 64],
+      "sources": [{ "path": "mcp/gemini_client.py", "line": 1, "label": "MCP client CLI" }]
+    },
+    {
+      "id": "mcp_server",
+      "type": "backend",
+      "label": "CareLoop MCP server",
+      "sublabel": ":8100 · pure REST client",
+      "tag": "6 careloop_* tools",
+      "pos": [300, 470],
+      "size": [190, 76],
+      "sources": [
+        { "path": "mcp/server.py", "line": 126, "label": "tool definitions" },
+        { "path": "mcp/careloop_client.py", "line": 42, "label": "httpx client" }
+      ]
+    },
+    {
+      "id": "watcher",
+      "type": "backend",
+      "label": "UrgencyWatcher",
+      "sublabel": "watches a folder · 10 s poll",
+      "tag": "urgency.messages",
+      "pos": [930, 470],
+      "size": [190, 72],
+      "sources": [{ "path": "UrgencyWatcher/watcher.py", "line": 114, "label": "poll loop" }]
+    },
+    {
+      "id": "laya",
+      "type": "backend",
+      "label": "laya Router",
+      "sublabel": "local PyTorch classifier",
+      "tag": "urgent / medium / not_urgent",
+      "pos": [930, 650],
+      "size": [190, 72],
+      "sources": [
+        { "path": "UrgencyWatcher/watcher.py", "line": 66, "label": "router.predict" },
+        { "path": "UrgencyWatcher/pyproject.toml", "line": 1, "label": "laya dependency" }
+      ]
+    }
+  ],
+  "connections": [
+    { "id": "session-to-app", "from": "ui_user", "to": "frontend" },
+    {
+      "id": "proxy-to-api",
+      "from": "frontend",
+      "to": "api",
+      "label": "proxied /api/*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "note-to-agent",
+      "from": "api",
+      "to": "note_agent",
+      "label": "invokes",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "agent-to-model",
+      "from": "note_agent",
+      "to": "gemini",
+      "label": "tools",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gaps-to-model",
+      "from": "care_gaps",
+      "to": "gemini",
+      "label": "coverage",
+      "variant": "dashed"
+    },
+    {
+      "id": "api-to-cards-store",
+      "from": "api",
+      "to": "db",
+      "label": "SQL / asyncpg",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "agent-to-cards-store",
+      "from": "note_agent",
+      "to": "db",
+      "label": "card writes",
+      "variant": "dashed"
+    },
+    {
+      "id": "api-to-gaps",
+      "from": "api",
+      "to": "care_gaps",
+      "label": "after save",
+      "variant": "dashed"
+    },
+    {
+      "id": "gaps-to-store",
+      "from": "care_gaps",
+      "to": "db",
+      "label": "review flags",
+      "variant": "dashed"
+    },
+    {
+      "id": "status-to-risk",
+      "from": "api",
+      "to": "deps",
+      "label": "status change",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "risk-to-store",
+      "from": "deps",
+      "to": "db",
+      "label": "at_risk rows"
+    },
+    {
+      "id": "client-to-mcp",
+      "from": "mcp_host",
+      "to": "mcp_server",
+      "label": "MCP/HTTP"
+    },
+    {
+      "id": "mcp-to-api",
+      "from": "mcp_server",
+      "to": "api",
+      "label": "REST calls"
+    },
+    {
+      "id": "watcher-to-router",
+      "from": "watcher",
+      "to": "laya",
+      "label": "predict",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "watcher-to-store",
+      "from": "watcher",
+      "to": "db",
+      "label": "inserts rows",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Note becomes a plan",
+      "items": [
+        "POST /api/notes/process saves the note and its cards in one transaction",
+        "One save_card call per item; five card types, never a combined card",
+        "A follow-up note closes the matching card and stores the confirming phrase"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Care gaps and risk",
+      "items": [
+        "28 diagnoses in the checklist; coverage is tested by a second model call",
+        "Doctors approve every flag: Add as card or Dismiss",
+        "Dependents turn at_risk while a blocker is open, and heal when it closes"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Agent surface",
+      "items": [
+        "The MCP server is a pure REST client and holds no database credentials",
+        "list_patients, list_cards, get_card, close_card, flag_card_risk, list_notes"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Triage sidecar",
+      "items": [
+        "UrgencyWatcher polls a folder every 10 s and archives handled files",
+        "laya routes each message to urgent, medium or not_urgent in urgency.messages"
+      ]
+    }
+  ]
+}

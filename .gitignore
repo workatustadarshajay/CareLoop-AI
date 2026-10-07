@@ -1,5 +1,4 @@
 # CareLoop-AI
-.github
 
 # Local secrets and environments
 .env
@@ -17,7 +16,7 @@ __pycache__/
 Frontend/node_modules/
 Frontend/dist/
 
-.agents
 unpacked
 brag-output-2026-09-28
 node_modules
+.agents
