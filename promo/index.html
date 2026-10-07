@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f1f3ec" />
+    <meta name="description" content="CareLoop turns care plans into clear next steps, and keeps every step moving." />
+    <title>CareLoop — Care that keeps moving</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./scene.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="scene-stage" aria-hidden="true">
+      <canvas id="care-scene"></canvas>
+      <div class="scene-stage__label"><span></span> THE CARE LOOP, IN MOTION</div>
+    </div>
+
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="CareLoop home"><span class="wordmark__symbol">C</span> CareLoop</a>
+      <nav aria-label="Main navigation">
+        <a href="#story">The idea</a>
+        <a href="#follow-through">The follow-through</a>
+        <a href="#for-people">For people</a>
+      </nav>
+      <a class="header-link" href="#story">Explore the loop <span aria-hidden="true">↘</span></a>
+    </header>
+
+    <main id="main">
+      <section class="hero chapter" id="top" data-scene="0">
+        <div class="hero__copy">
+          <p class="eyebrow"><span class="eyebrow__line"></span> A more connected kind of care</p>
+          <h1>Care should<br />keep <em>moving.</em></h1>
+          <p class="hero__dek">A visit ends. The care plan keeps going. CareLoop turns the note into clear next steps, and helps every one of them find its way to done.</p>
+          <a class="button-link" href="#story">Follow the loop <span aria-hidden="true">↓</span></a>
+          <p class="hero__caption">ONE VISIT. EVERY NEXT STEP. STILL CONNECTED.</p>
+        </div>
+        <div class="hero__index" aria-hidden="true"><span>01</span> / 04</div>
+      </section>
+
+      <section class="chapter chapter--paper" id="story" data-scene="1">
+        <div class="chapter__copy">
+          <p class="eyebrow"><span class="eyebrow__line"></span> 01 — Start with the note</p>
+          <h2>One conversation.<br />A plan that <em>makes sense.</em></h2>
+          <p>A clinician's note holds a lot: a test to book, a medicine to start, a person to call. CareLoop brings those instructions into one clear plan, written for the people who need to act on it.</p>
+          <div class="chapter__aside"><span class="aside-mark">01</span><span>From clinical detail<br />to a clear next step.</span></div>
+        </div>
+      </section>
+
+      <section class="chapter chapter--tint" id="follow-through" data-scene="2">
+        <div class="chapter__copy">
+          <p class="eyebrow"><span class="eyebrow__line"></span> 02 — Keep the steps connected</p>
+          <h2>Because the next<br />step depends on <em>this one.</em></h2>
+          <p>Tests, referrals and follow-ups do not happen in isolation. CareLoop keeps the relationships visible, so a delay in one step does not quietly stall the rest.</p>
+          <div class="chapter__aside"><span class="aside-mark aside-mark--coral">02</span><span>See what is moving.<br />Notice what needs care.</span></div>
+        </div>
+      </section>
+
+      <section class="image-interlude" data-scene="3" aria-labelledby="interlude-title">
+        <img
+          src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=2200&q=85"
+          alt="Care team members reviewing a patient's care together"
+          loading="lazy"
+        />
+        <div class="image-interlude__shade"></div>
+        <div class="image-interlude__copy">
+          <p class="eyebrow eyebrow--light"><span class="eyebrow__line"></span> Care is a team effort</p>
+          <h2 id="interlude-title">Better follow-through<br />leaves more room<br />for <em>people.</em></h2>
+          <p>Less chasing the details. More attention for the person behind the plan.</p>
+        </div>
+        <p class="image-interlude__note">CARE, CONNECTED</p>
+      </section>
+
+      <section class="chapter chapter--paper" id="for-people" data-scene="4">
+        <div class="chapter__copy">
+          <p class="eyebrow"><span class="eyebrow__line"></span> 03 — Close the loop</p>
+          <h2>Done means<br />there is <em>evidence.</em></h2>
+          <p>When a follow-up confirms the MRI happened, that step can close as verified. The plan reflects what actually happened, not just what was scheduled.</p>
+          <div class="chapter__aside"><span class="aside-mark aside-mark--lime">03</span><span>From plan to proof.<br />The whole way through.</span></div>
+        </div>
+      </section>
+
+      <section class="closing" data-scene="5">
+        <p class="eyebrow eyebrow--light"><span class="eyebrow__line"></span> CareLoop</p>
+        <h2>Good care doesn't<br />stop at <em>good intentions.</em></h2>
+        <p>It keeps moving, one clear next step at a time.</p>
+        <a class="closing__link" href="#top">Back to the beginning <span aria-hidden="true">↑</span></a>
+        <span class="closing__orb" aria-hidden="true">C</span>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="wordmark wordmark--footer" href="#top"><span class="wordmark__symbol">C</span> CareLoop</a>
+      <span>Care plans that keep moving.</span>
+      <a href="#top">Back to top ↑</a>
+    </footer>
+  </body>
+</html>

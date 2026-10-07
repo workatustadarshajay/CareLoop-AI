@@ -161,6 +161,18 @@
   overflow: hidden;
 }
 
+.lhero__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0.78;
+  mask-image: linear-gradient(90deg, transparent 4%, rgba(0, 0, 0, 0.18) 30%, #000 58%);
+  pointer-events: none;
+}
+.lhero__scene canvas { display: block; width: 100%; height: 100%; }
+.lhero__copy, .lhero__preview, .lstats { position: relative; z-index: 1; }
+
 /* Optional footage behind the hero; fades in only once it can play. */
 .lhero__video {
   position: absolute;
@@ -502,6 +514,7 @@
 }
 
 @media (max-width: 600px) {
+  .lhero__scene { opacity: 0.28; mask-image: radial-gradient(ellipse at 74% 30%, #000 0%, rgba(0, 0, 0, 0.72) 35%, transparent 78%); }
   .pcard--risk, .preminder { transform: none; }
   .lfoot { flex-direction: column; align-items: flex-start; }
   .lfoot__meta { justify-items: start; }

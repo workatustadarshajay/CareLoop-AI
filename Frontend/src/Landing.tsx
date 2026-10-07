@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { HeroScene } from './HeroScene'
 import './Landing.css'
 
 /** Adds .in-view to every [data-reveal] element once it scrolls into the viewport. */
@@ -145,6 +146,7 @@ export function Landing({ onSignIn }: { onSignIn: () => void }) {
 
       <main id="landing-main">
         <section className="lhero" id="top">
+          <HeroScene />
           <HeroVideo />
           <div className="lhero__glow" aria-hidden="true" />
           <div className="lhero__grid" aria-hidden="true" />

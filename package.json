@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "hyperframes": "^0.8.81"
+    "hyperframes": "^0.8.81",
+    "three": "^0.186.1"
   }
 }

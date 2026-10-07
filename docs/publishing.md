@@ -20,7 +20,8 @@ MkDocs is not a project dependency; it is only needed to publish. Install it wit
 
 `.github/workflows/pages.yml` is already in the repository. Once Pages is set to
 *Source: GitHub Actions* in **Settings → Pages**, every push to `main` that touches
-`docs/`, `deck/` or the workflow republishes the site.
+`docs/`, `deck/`, `promo/` or the workflow republishes the site. The independent
+promotional landing page is published at `/promo/`; it does not use the React app.
 
 **Route B — `mkdocs gh-deploy` (branch-based).**
 
