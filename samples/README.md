@@ -36,11 +36,19 @@ Headless equivalent (the same calls the UI makes):
 
 ```bash
 API=http://127.0.0.1:8000/api
+
 TOKEN=$(curl -s -X POST $API/auth/login -H 'Content-Type: application/json' \
   -d '{"username":"coordinator","password":"password"}' \
   | python3 -c 'import sys, json; print(json.load(sys.stdin)["token"])')
 
-python3 -c 'import json,pathlib; print(json.dumps({"text": pathlib.Path("samples/demo-visit-note.txt").read_text(), "patient_id": 13}))' > /tmp/note.json
+PATIENT_ID=$(curl -s -H "Authorization: Bearer $TOKEN" $API/patients \
+  | python3 -c 'import sys, json; print(next(p["id"] for p in json.load(sys.stdin) if p["name"] == "Maria Delgado"))')
+
+python3 - "$PATIENT_ID" > /tmp/note.json <<'PY'
+import json, pathlib, sys
+print(json.dumps({"text": pathlib.Path("samples/demo-visit-note.txt").read_text(), "patient_id": int(sys.argv[1])}))
+PY
+
 curl -s -X POST $API/notes/process -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' -d @/tmp/note.json | python3 -m json.tool
 ```
@@ -81,5 +89,5 @@ With the follow-up visit card depending on both lab cards, it read `at_risk` bef
 - Extraction and the care-gap coverage check are both Gemini calls. Card wording, the number of cards
   and the recommendation set can shift by one between runs; the counts above are what one real run
   produced, not a guarantee.
-- The `patient_id` in the headless example is whatever patient you created; read it from
-  `GET /api/patients` first.
+- The headless example looks the patient up by the name you created in step 1; change it if you
+  named the patient something else.
