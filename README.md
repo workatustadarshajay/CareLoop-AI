@@ -20,7 +20,7 @@ CareLoop explores a closed-loop workflow: turn the plan into explicit actions, k
 
 1. **Capture the plan.** A clinician pastes a visit note into the application.
 2. **Structure the next steps.** An AI agent identifies actionable items and saves typed care cards with descriptions and due dates where available.
-3. **Coordinate follow-through.** Patients see their own plain-language cards and reminders. Clinicians can review the broader plan, dependencies, overdue work, and at-risk steps.
+3. **Coordinate follow-through.** Patients see their own plain-language cards and reminders, read-only. Care coordinators pick any patient and add the update notes that keep a plan current; clinicians review the broader plan, dependencies, overdue work, and at-risk steps.
 4. **Close with evidence.** A follow-up note can confirm a completed action and close the matching card as verified. Dependent work is re-evaluated when its blocker changes.
 
 ## Business value
@@ -32,7 +32,7 @@ CareLoop is designed to make post-visit coordination easier to see and manage. I
 - **Clearer patient actions:** translate clinical instructions into plain-language cards while retaining the original wording for context.
 - **Less manual status chasing:** use follow-up evidence to update completion and re-check dependent actions.
 - **More consistent review:** compare a plan with condition-specific care checklists and present missing items as clinician-reviewed recommendations.
-- **Role-appropriate visibility:** give patients, clinicians, and administrators different views of the workflow.
+- **Role-appropriate visibility:** give patients, care coordinators, clinicians, and administrators different views of the workflow.
 
 These are intended workflow benefits. The repository does not establish that CareLoop improves clinical outcomes, reduces costs, or replaces clinical judgment.
 
@@ -40,9 +40,10 @@ These are intended workflow benefits. The repository does not establish that Car
 
 | User | What CareLoop helps them see or do |
 | --- | --- |
-| **Patients** | Review their own upcoming and open actions in plain language, with reminders for near-term due dates. |
+| **Patients** | Review their own upcoming and open actions in plain language, with reminders for near-term due dates. The view is read-only: the care team updates the plan. |
+| **Care coordinators** | Choose any patient, add the update notes that confirm what was done, keep statuses and due dates current, and link dependent steps. |
 | **Clinicians** | Review patient plans, overdue work, dependencies, at-risk steps, and proposed care-gap recommendations. |
-| **Administrators** | Create patient records and logins without taking on clinical decision-making. |
+| **Administrators** | Create, update and remove patient, doctor, care coordinator and administrator logins. |
 | **Care teams and builders** | Adapt checklist content, agent prompts, and reminder windows in editable project files. |
 
 ## Product visuals

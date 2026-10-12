@@ -7,7 +7,8 @@ from app.db.base import Base
 
 
 class Role(StrEnum):
-    PATIENT = "patient"
+    PATIENT = "patient"  # read-only: sees their own cards and reminders
+    CARE_COORDINATOR = "care_coordinator"  # works on any patient's plan, but makes no clinical calls
     DOCTOR = "doctor"
     ADMIN = "admin"  # everything a doctor can do, plus managing patients/accounts
 
@@ -25,6 +26,7 @@ class Account(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(200), nullable=False)
+    # length=16: the longest role value ("care_coordinator") must fit the column.
     role: Mapped[Role] = mapped_column(
         Enum(Role, native_enum=False, length=16, values_callable=lambda e: [m.value for m in e]),
         nullable=False,

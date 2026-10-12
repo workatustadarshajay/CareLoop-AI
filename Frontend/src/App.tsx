@@ -3,7 +3,7 @@ import type { ComponentProps, FormEvent } from 'react'
 import { CardDependencies } from './components/CardDependencies'
 import { Landing } from './Landing'
 import { LOGOUT_EVENT, apiUrl, getAuth, responseError, setAuth } from './api'
-import type { Auth } from './api'
+import type { Auth, Role } from './api'
 import './App.css'
 
 type CardType = 'medication' | 'test' | 'referral' | 'next_visit' | 'general_task'
@@ -44,6 +44,24 @@ type Recommendation = {
 type PatientFilter = number | 'all'
 type StatusFilter = 'all' | 'open' | 'at_risk' | 'overdue' | 'closed'
 
+/** Account record as the administrator screen sees it. */
+type AccountRow = {
+  id: number
+  username: string
+  role: Role
+  patient_id: number | null
+  patient_name: string | null
+}
+
+const roleLabels: Record<Role, string> = {
+  patient: 'Patient',
+  care_coordinator: 'Care coordinator',
+  doctor: 'Doctor',
+  admin: 'Administrator',
+}
+
+const roleOptions: Role[] = ['patient', 'care_coordinator', 'doctor', 'admin']
+
 const typeLabels: Record<CardType, string> = {
   medication: 'Medication',
   test: 'Test',
@@ -71,6 +89,7 @@ const statusFilters: { key: StatusFilter; label: string; match: (card: Card) => 
 const testAccounts = [
   { username: 'admin', label: 'Administrator' },
   { username: 'dr_smith', label: 'Doctor' },
+  { username: 'coordinator', label: 'Care coordinator' },
   { username: 'alice', label: 'Patient: Alice' },
   { username: 'bob', label: 'Patient: Bob' },
 ]
@@ -151,7 +170,7 @@ function Login({ onLogin, onBack }: { onLogin: (auth: Auth) => void; onBack: () 
   )
 }
 
-function CardBody({ card, onChanged }: { card: Card; onChanged: () => void }) {
+function CardBody({ card, canEdit, onChanged }: { card: Card; canEdit: boolean; onChanged: () => void }) {
   const [showClinical, setShowClinical] = useState(false)
   const [dependencies, setDependencies] = useState<ComponentProps<typeof CardDependencies>['dependencies']>([])
 
@@ -189,6 +208,7 @@ function CardBody({ card, onChanged }: { card: Card; onChanged: () => void }) {
         dependencies={dependencies}
         isAtRisk={card.status === 'at_risk'}
         atRiskReason={card.risk_reason}
+        canEdit={canEdit}
         onDependencyCreated={onChanged}
         onDependencyDeleted={onChanged}
       />
@@ -299,30 +319,60 @@ function PatientPicker({
   )
 }
 
-/** Administrator-only: create a patient and their login in one step. */
-function NewPatient({ onCreated, onClose }: { onCreated: (patient: Patient) => void; onClose: () => void }) {
+/**
+ * Administrator-only: add or update a login. A patient account always carries the
+ * patient record, so its role is fixed; staff accounts can be re-roled.
+ */
+function AccountDialog({
+  account, onSaved, onClose,
+}: {
+  account?: AccountRow
+  onSaved: (account: AccountRow, mode: 'create' | 'edit') => void
+  onClose: () => void
+}) {
   const ref = useRef<HTMLDialogElement>(null)
-  const [name, setName] = useState('')
-  const [username, setUsername] = useState('')
+  const isEdit = account !== undefined
+  const isPatientAccount = account?.patient_id != null
+  const [role, setRole] = useState<Role>(account?.role ?? 'patient')
+  const [name, setName] = useState(account?.patient_name ?? '')
+  const [username, setUsername] = useState(account?.username ?? '')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   useEffect(() => { ref.current?.showModal() }, [])
 
+  const showsNameField = role === 'patient'
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setIsSubmitting(true)
     setError(null)
+    if (!isEdit && !password) {
+      setError('Set a temporary password for this new login.')
+      return
+    }
+    setIsSubmitting(true)
     try {
-      const patient = await fetchJson<Patient>('/patients', {
-        method: 'POST',
+      const body: Record<string, unknown> = { username }
+      if (password) {
+        body.password = password
+      }
+      if (showsNameField) {
+        body.name = name
+      }
+      if (!isEdit) {
+        body.role = role
+      } else if (!isPatientAccount && role !== account.role) {
+        body.role = role
+      }
+      const saved = await fetchJson<AccountRow>(isEdit ? `/accounts/${account.id}` : '/accounts', {
+        method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, username, password }),
+        body: JSON.stringify(body),
       })
-      onCreated(patient)
+      onSaved(saved, isEdit ? 'edit' : 'create')
       onClose()
-    } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Could not create patient.')
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Could not save this account.')
     } finally {
       setIsSubmitting(false)
     }
@@ -334,22 +384,94 @@ function NewPatient({ onCreated, onClose }: { onCreated: (patient: Patient) => v
         <div className="panel-heading">
           <div>
             <p className="eyebrow">Administrator</p>
-            <h2>New patient</h2>
+            <h2>{isEdit ? `Update ${account.username}` : 'New account'}</h2>
           </div>
           <button type="button" className="card-toggle" onClick={onClose}>Close</button>
         </div>
-        <label htmlFor="np-name">Full name</label>
-        <input id="np-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} />
-        <label htmlFor="np-username">Login username</label>
-        <input id="np-username" value={username} onChange={(e) => setUsername(e.target.value)} required pattern="[A-Za-z0-9_.-]+" minLength={2} autoComplete="off" />
-        <label htmlFor="np-password">Temporary password</label>
-        <input id="np-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
+        <label htmlFor="ac-role">Role</label>
+        <select
+          id="ac-role"
+          value={role}
+          onChange={(e) => setRole(e.target.value as Role)}
+          disabled={isPatientAccount}
+        >
+          {roleOptions.map((option) => <option key={option} value={option}>{roleLabels[option]}</option>)}
+        </select>
+        {showsNameField && (
+          <>
+            <label htmlFor="ac-name">Patient name</label>
+            <input id="ac-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} />
+          </>
+        )}
+        <label htmlFor="ac-username">Login username</label>
+        <input id="ac-username" value={username} onChange={(e) => setUsername(e.target.value)} required pattern="[A-Za-z0-9_.-]+" minLength={2} autoComplete="off" />
+        <label htmlFor="ac-password">{isEdit ? 'New password (leave blank to keep)' : 'Temporary password'}</label>
+        <input id="ac-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required={!isEdit} autoComplete="new-password" />
+        {isEdit && isPatientAccount && (
+          <p className="eyebrow">A patient login keeps the patient role.</p>
+        )}
         {error && <p className="message message-error" role="alert">{error}</p>}
         <div className="form-footer">
-          <span className="character-count">The patient logs in with these details.</span>
-          <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creating...' : 'Create patient'}</button>
+          <span className="character-count">
+            {showsNameField ? 'The patient signs in with these details.' : 'Staff logins are not linked to a patient.'}
+          </span>
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : isEdit ? 'Save changes' : 'Create account'}
+          </button>
         </div>
       </form>
+    </dialog>
+  )
+}
+
+/** Administrator-only: confirm removal. A patient account takes the plan with it. */
+function DeleteAccount({
+  account, onDeleted, onClose,
+}: {
+  account: AccountRow
+  onDeleted: (message: string) => void
+  onClose: () => void
+}) {
+  const ref = useRef<HTMLDialogElement>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  useEffect(() => { ref.current?.showModal() }, [])
+
+  async function confirm() {
+    setIsDeleting(true)
+    setError(null)
+    try {
+      const result = await fetchJson<{ message?: string }>(`/accounts/${account.id}`, { method: 'DELETE' })
+      onDeleted(result?.message ?? `Deleted “${account.username}”.`)
+      onClose()
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Could not delete this account.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <dialog ref={ref} className="picker" onClose={onClose}>
+      <div className="panel-heading">
+        <div>
+          <p className="eyebrow">Delete</p>
+          <h2>{account.patient_name ?? account.username}</h2>
+        </div>
+        <button type="button" className="card-toggle" onClick={onClose}>Cancel</button>
+      </div>
+      <p>
+        {account.patient_id !== null
+          ? `${account.patient_name} is removed together with the login “${account.username}”, every note and every card in their plan.`
+          : `The ${roleLabels[account.role].toLowerCase()} login “${account.username}” is removed.`}
+      </p>
+      {error && <p className="message message-error" role="alert">{error}</p>}
+      <div className="form-footer">
+        <span className="character-count">This cannot be undone.</span>
+        <button type="button" onClick={() => void confirm()} disabled={isDeleting}>
+          {isDeleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
     </dialog>
   )
 }
@@ -426,79 +548,113 @@ function Summary({ cards }: { cards: Card[] }) {
   )
 }
 
-/** Administrators manage patients only: no notes, cards or recommendations. */
+/** Administrators manage every login: patients, doctors, care coordinators and other administrators. */
+type AccountDialogState =
+  | { mode: 'create' }
+  | { mode: 'edit'; account: AccountRow }
+  | { mode: 'delete'; account: AccountRow }
+
 function AdminView() {
-  const [patients, setPatients] = useState<Patient[]>([])
+  const [accounts, setAccounts] = useState<AccountRow[]>([])
   const [query, setQuery] = useState('')
-  const [showNewPatient, setShowNewPatient] = useState(false)
+  const [dialog, setDialog] = useState<AccountDialogState | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchJson<Patient[]>('/patients').then(setPatients).catch((e) => setError(e instanceof Error ? e.message : 'Could not load patients.'))
+    fetchJson<AccountRow[]>('/accounts').then(setAccounts).catch((e) => setError(e instanceof Error ? e.message : 'Could not load accounts.'))
   }, [])
 
   const needle = query.trim().toLowerCase()
-  const shown = patients.filter((p) => !needle || p.name.toLowerCase().includes(needle) || (p.username ?? '').toLowerCase().includes(needle) || String(p.id) === needle)
+  const shown = accounts.filter((a) => !needle
+    || a.username.toLowerCase().includes(needle)
+    || (a.patient_name ?? '').toLowerCase().includes(needle)
+    || roleLabels[a.role].toLowerCase().includes(needle)
+    || String(a.id) === needle)
+  const staffCount = accounts.filter((a) => a.patient_id === null).length
+
+  function upsert(row: AccountRow, mode: 'create' | 'edit') {
+    setAccounts((list) => {
+      const next = mode === 'create' ? [...list, row] : list.map((a) => (a.id === row.id ? row : a))
+      return next.sort((a, b) => a.username.localeCompare(b.username))
+    })
+    setMessage(mode === 'create'
+      ? `Created the ${roleLabels[row.role].toLowerCase()} login “${row.username}”${row.patient_name ? ` for ${row.patient_name}` : ''}.`
+      : `Updated “${row.username}”.`)
+  }
 
   return (
     <>
       <section className="intro" aria-labelledby="page-title">
         <p className="eyebrow">Administration</p>
-        <h1 id="page-title">Patients and logins.</h1>
-        <p className="intro-copy">Create patients and their logins here. Doctors and patients do the clinical work.</p>
+        <h1 id="page-title">People and their logins.</h1>
+        <p className="intro-copy">
+          Add, update or remove patients, doctors and care coordinators. Patients open a read-only plan;
+          care coordinators and doctors work on the plans.
+        </p>
       </section>
 
-      <section className="cards-panel admin-panel" aria-labelledby="patients-title">
+      <section className="cards-panel admin-panel" aria-labelledby="accounts-title">
         <div className="panel-heading">
           <div>
-            <p className="eyebrow">Patients</p>
-            <h2 id="patients-title">Everyone with a login.</h2>
+            <p className="eyebrow">Accounts</p>
+            <h2 id="accounts-title">Everyone with a login.</h2>
           </div>
-          <span className="card-count">{patients.length}</span>
+          <span className="card-count">{accounts.length}</span>
         </div>
 
         <div className="toolbar">
           <input
             type="search"
             className="picker-search"
-            placeholder="Search by name, username or id…"
-            aria-label="Search patients"
+            placeholder="Search by name, username, role or id…"
+            aria-label="Search accounts"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button type="button" className="chip" onClick={() => setShowNewPatient(true)}>+ New patient</button>
+          <button type="button" className="chip" onClick={() => setDialog({ mode: 'create' })}>+ New account</button>
         </div>
 
         {error && <p className="message message-error" role="alert">{error}</p>}
         {message && <p className="message message-success" role="status">{message}</p>}
 
         {shown.length === 0 ? (
-          <p className="empty-state">{patients.length === 0 ? 'No patients yet.' : `No patient matches “${query}”.`}</p>
+          <p className="empty-state">{accounts.length === 0 ? 'No accounts yet.' : `No account matches “${query}”.`}</p>
         ) : (
           <table className="patient-table">
             <thead>
-              <tr><th>Id</th><th>Name</th><th>Login username</th></tr>
+              <tr><th>Id</th><th>Patient</th><th>Login username</th><th>Role</th><th>Actions</th></tr>
             </thead>
             <tbody>
-              {shown.map((p) => (
-                <tr key={p.id}>
-                  <td className="mono"># {p.id}</td>
-                  <td>{p.name}</td>
-                  <td className="mono">{p.username ?? <span className="dependencies-empty">no login</span>}</td>
+              {shown.map((row) => (
+                <tr key={row.id}>
+                  <td className="mono"># {row.id}</td>
+                  <td>{row.patient_name ?? <span className="dependencies-empty">not a patient</span>}</td>
+                  <td className="mono">{row.username}</td>
+                  <td><span className="role-tag">{roleLabels[row.role]}</span></td>
+                  <td className="row-actions">
+                    <button type="button" className="card-toggle" onClick={() => setDialog({ mode: 'edit', account: row })}>Update</button>
+                    <button type="button" className="card-toggle" onClick={() => setDialog({ mode: 'delete', account: row })}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
+        <p className="character-count">{accounts.length} logins · {staffCount} staff</p>
       </section>
 
-      {showNewPatient && (
-        <NewPatient
-          onClose={() => setShowNewPatient(false)}
-          onCreated={(patient) => {
-            setPatients((list) => [...list, patient].sort((a, b) => a.name.localeCompare(b.name)))
-            setMessage(`Patient ${patient.name} created. They can log in as “${patient.username}” now.`)
+      {dialog?.mode === 'create' && <AccountDialog onClose={() => setDialog(null)} onSaved={upsert} />}
+      {dialog?.mode === 'edit' && (
+        <AccountDialog account={dialog.account} onClose={() => setDialog(null)} onSaved={upsert} />
+      )}
+      {dialog?.mode === 'delete' && (
+        <DeleteAccount
+          account={dialog.account}
+          onClose={() => setDialog(null)}
+          onDeleted={(text) => {
+            setAccounts((list) => list.filter((a) => a.id !== dialog.account.id))
+            setMessage(text)
           }}
         />
       )}
@@ -508,6 +664,10 @@ function AdminView() {
 
 function Workspace({ auth }: { auth: Auth }) {
   const isDoctor = auth.role === 'doctor'
+  // Care coordinators work on any patient's plan but make no clinical calls.
+  const isCoordinator = auth.role === 'care_coordinator'
+  const isCareTeam = isDoctor || isCoordinator
+  const canReview = isDoctor
   const [noteText, setNoteText] = useState('')
   const [cards, setCards] = useState<Card[]>([])
   const [patients, setPatients] = useState<Patient[]>([])
@@ -528,7 +688,7 @@ function Workspace({ auth }: { auth: Auth }) {
       const [nextCards, nextReminders, nextRecs] = await Promise.all([
         fetchJson<Card[]>('/cards'),
         isDoctor ? Promise.resolve([]) : fetchJson<Reminder[]>('/reminders'),
-        isDoctor ? fetchJson<Recommendation[]>('/review-flags') : Promise.resolve([]),
+        canReview ? fetchJson<Recommendation[]>('/review-flags') : Promise.resolve([]),
       ])
       setCards(nextCards)
       setReminders(nextReminders)
@@ -539,11 +699,11 @@ function Workspace({ auth }: { auth: Auth }) {
     } finally {
       setIsLoading(false)
     }
-  }, [isDoctor])
+  }, [isDoctor, canReview])
 
   useEffect(() => {
     void Promise.resolve().then(refresh)
-    if (isDoctor) {
+    if (isCareTeam) {
       // Doctors start on their first patient; the picker widens the view to everyone.
       fetchJson<Patient[]>('/patients')
         .then((list) => {
@@ -553,13 +713,15 @@ function Workspace({ auth }: { auth: Auth }) {
         })
         .catch(() => setPatients([]))
     }
-  }, [refresh, isDoctor])
+  }, [refresh, isCareTeam])
 
   const patientName = (id: number | null) => patients.find((p) => p.id === id)?.name ?? (id ? `Patient ${id}` : 'Unassigned')
-  const inPatientFilter = (id: number | null) => !isDoctor || patientFilter === 'all' || patientFilter === null || id === patientFilter
+  const inPatientFilter = (id: number | null) => !isCareTeam || patientFilter === 'all' || patientFilter === null || id === patientFilter
   const patientCards = cards.filter((card) => inPatientFilter(card.patient_id))
   const visibleCards = patientCards.filter(statusFilters.find((f) => f.key === statusFilter)!.match)
   const visibleRecs = recommendations.filter((rec) => inPatientFilter(rec.patient_id))
+  const reminderPatient = (reminder: Reminder) => cards.find((card) => card.id === reminder.card_id)?.patient_id ?? null
+  const visibleReminders = reminders.filter((reminder) => inPatientFilter(reminderPatient(reminder)))
 
   function choosePatient(next: PatientFilter) {
     setPatientFilter(next)
@@ -582,7 +744,7 @@ function Workspace({ auth }: { auth: Auth }) {
       const result = await fetchJson<NoteProcessResponse>('/notes/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: noteText, patient_id: isDoctor ? notePatientId || null : undefined }),
+        body: JSON.stringify({ text: noteText, patient_id: isCareTeam ? notePatientId || null : undefined }),
       })
       await refresh()
       setNoteText('')
@@ -601,75 +763,89 @@ function Workspace({ auth }: { auth: Auth }) {
   return (
     <>
       <section className="intro" aria-labelledby="page-title">
-        <p className="eyebrow">{isDoctor ? 'All patients' : 'Your care plan'}</p>
+        <p className="eyebrow">{isCareTeam ? 'All patients' : 'Your care plan'}</p>
         <h1 id="page-title">Make the next step visible.</h1>
         <p className="intro-copy">
           {isDoctor
             ? "Paste a doctor's note for a patient and CareLoop will turn each action into a card they can follow."
-            : "Your doctor's next steps, and reminders for what's coming up. Add a note when you've completed something."}
+            : isCoordinator
+              ? 'Choose a patient, then add an update note. CareLoop closes the matching card and re-checks anything that was waiting on it.'
+              : "Your doctor's next steps in plain language, with reminders for what is coming up. Your care coordinator keeps this plan up to date."}
         </p>
       </section>
 
       <section className="workspace-grid">
         <div className="side-column">
-          <form className="note-panel" onSubmit={handleSubmit}>
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">01 / Add a note</p>
-                <h2>{isDoctor ? 'What did the doctor say?' : 'What have you done?'}</h2>
+          {isCareTeam ? (
+            <form className="note-panel" onSubmit={handleSubmit}>
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">{isDoctor ? '01 / Add a note' : '01 / Update a plan'}</p>
+                  <h2>{isDoctor ? 'What did the doctor say?' : 'What has changed for this patient?'}</h2>
+                </div>
+                <span className="panel-number">A</span>
               </div>
-              <span className="panel-number">A</span>
-            </div>
-            {isDoctor && (
-              <>
-                <label htmlFor="patient">Patient</label>
-                <select
-                  id="patient"
-                  value={notePatientId}
-                  onChange={(e) => setNotePatientId(e.target.value ? Number(e.target.value) : '')}
-                  required
-                >
-                  <option value="">Choose a patient</option>
-                  {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </>
-            )}
-            <label htmlFor="note-text">{isDoctor ? "Doctor's note" : 'Follow-up note'}</label>
-            <textarea
-              id="note-text"
-              value={noteText}
-              onChange={(event) => setNoteText(event.target.value)}
-              placeholder={isDoctor
-                ? 'Get an MRI next week. Pick up the new medication. Come back in two weeks.'
-                : 'MRI completed this morning.'}
-              maxLength={12000}
-              required
-            />
-            <div className="form-footer">
-              <span className="character-count">{noteText.length.toLocaleString()} / 12,000</span>
-              <button type="submit" disabled={isSubmitting || !noteText.trim() || (isDoctor && !notePatientId)}>
-                {isSubmitting ? 'Processing...' : 'Process note'}
-                <span aria-hidden="true">-&gt;</span>
-              </button>
-            </div>
-          </form>
+              <label htmlFor="patient">Patient</label>
+              <select
+                id="patient"
+                value={notePatientId}
+                onChange={(e) => setNotePatientId(e.target.value ? Number(e.target.value) : '')}
+                required
+              >
+                <option value="">Choose a patient</option>
+                {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <label htmlFor="note-text">{isDoctor ? "Doctor's note" : 'Update note'}</label>
+              <textarea
+                id="note-text"
+                value={noteText}
+                onChange={(event) => setNoteText(event.target.value)}
+                placeholder={isDoctor
+                  ? 'Get an MRI next week. Pick up the new medication. Come back in two weeks.'
+                  : 'Fasting lipid panel completed this morning at the lab.'}
+                maxLength={12000}
+                required
+              />
+              <div className="form-footer">
+                <span className="character-count">{noteText.length.toLocaleString()} / 12,000</span>
+                <button type="submit" disabled={isSubmitting || !noteText.trim() || !notePatientId}>
+                  {isSubmitting ? 'Processing...' : isDoctor ? 'Process note' : 'Add update'}
+                  <span aria-hidden="true">-&gt;</span>
+                </button>
+              </div>
+            </form>
+          ) : (
+            <section className="note-panel read-only-panel" aria-labelledby="read-only-title">
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Your plan</p>
+                  <h2 id="read-only-title">Kept up to date for you</h2>
+                </div>
+                <span className="panel-number">A</span>
+              </div>
+              <p className="empty-state">
+                Your care coordinator updates this plan after each visit or call, so the cards here are the
+                current version. Tell your care team if something looks out of date.
+              </p>
+            </section>
+          )}
 
-          {isDoctor && <Recommendations items={visibleRecs} onChanged={() => void refresh()} />}
+          {canReview && <Recommendations items={visibleRecs} onChanged={() => void refresh()} />}
 
           {!isDoctor && (
             <section className="note-panel reminders-panel" aria-labelledby="reminders-title">
               <div className="panel-heading">
                 <div>
-                  <p className="eyebrow">Your reminders</p>
+                  <p className="eyebrow">{isCoordinator ? 'Reminders' : 'Your reminders'}</p>
                   <h2 id="reminders-title">Coming up</h2>
                 </div>
-                <span className="panel-number">{reminders.length}</span>
+                <span className="panel-number">{visibleReminders.length}</span>
               </div>
-              {reminders.length === 0 ? (
+              {visibleReminders.length === 0 ? (
                 <p className="empty-state">Nothing due soon.</p>
               ) : (
                 <ul className="reminder-list">
-                  {reminders.map((reminder) => (
+                  {visibleReminders.map((reminder) => (
                     <li key={reminder.id} className={reminder.message.startsWith('Overdue') ? 'reminder overdue' : 'reminder'}>
                       {reminder.message}
                     </li>
@@ -683,7 +859,7 @@ function Workspace({ auth }: { auth: Auth }) {
         <section className="cards-panel" aria-labelledby="cards-title">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">02 / {isDoctor ? (patientFilter === 'all' ? 'All patients' : patientName(patientFilter)) : 'Your cards'}</p>
+              <p className="eyebrow">02 / {isCareTeam ? (patientFilter === 'all' ? 'All patients' : patientName(patientFilter)) : 'Your cards'}</p>
               <h2 id="cards-title">Every next step, in one place.</h2>
             </div>
             <span className="card-count">{visibleCards.length}</span>
@@ -705,7 +881,7 @@ function Workspace({ auth }: { auth: Auth }) {
                 </button>
               ))}
             </div>
-            {isDoctor && (
+            {isCareTeam && (
               <button type="button" className="chip" onClick={() => setShowPicker(true)}>
                 Choose patient…
               </button>
@@ -718,7 +894,7 @@ function Workspace({ auth }: { auth: Auth }) {
           {isLoading ? (
             <p className="empty-state">Loading cards...</p>
           ) : visibleCards.length === 0 ? (
-            <p className="empty-state">{cards.length === 0 ? (isDoctor ? 'No cards yet.' : 'Your cards will appear here.') : 'No cards match this filter.'}</p>
+            <p className="empty-state">{cards.length === 0 ? (isCareTeam ? 'No cards yet.' : 'Your cards will appear here.') : 'No cards match this filter.'}</p>
           ) : (
             <ul className="card-list">
               {visibleCards.map((card) => (
@@ -727,10 +903,10 @@ function Workspace({ auth }: { auth: Auth }) {
                     <span aria-hidden="true" />
                     {typeLabels[card.type]}
                     <span className="card-id"># {card.id}</span>
-                    {isDoctor && <span className="card-patient">{patientName(card.patient_id)}</span>}
+                    {isCareTeam && <span className="card-patient">{patientName(card.patient_id)}</span>}
                   </div>
-                  <CardBody card={card} onChanged={() => void refresh()} />
-                  {isDoctor && <CardControls card={card} onChanged={() => void refresh()} />}
+                  <CardBody card={card} canEdit={isCareTeam} onChanged={() => void refresh()} />
+                  {isCareTeam && <CardControls card={card} onChanged={() => void refresh()} />}
                   <div className="card-meta">
                     <span>{card.status.replace('_', ' ')}</span>
                     {card.status === 'at_risk' && (
@@ -792,7 +968,7 @@ function App() {
           <span />
           {auth ? (
             <>
-              {auth.username} · {auth.role === 'admin' ? 'Administrator' : auth.role === 'doctor' ? 'Doctor' : 'Patient'}
+              {auth.username} · {roleLabels[auth.role]}
               <button type="button" className="card-toggle" onClick={logout}>Log out</button>
             </>
           ) : 'Signed out'}

@@ -680,3 +680,25 @@ button:disabled {
 }
 
 .patient-table .mono { color: var(--muted); font: 12px/1.4 var(--mono); }
+
+.role-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--accent-wash);
+  font: 700 10px/1.4 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.row-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.row-actions .card-toggle { margin-left: 10px; }
+
+/* Patients read their plan; only the care team gets an editable note panel. */
+.read-only-panel .empty-state { margin-bottom: 0; }

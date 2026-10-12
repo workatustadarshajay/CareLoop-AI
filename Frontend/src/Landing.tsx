@@ -58,7 +58,7 @@ const steps = [
   {
     n: '02',
     title: 'Everyone sees their part',
-    body: 'Patients see only their own cards in plain language, with reminders for what is coming up. Doctors see every patient, at-risk flags and what is overdue.',
+    body: 'Patients see only their own cards in plain language — read-only — with reminders for what is coming up. Doctors and care coordinators see every patient, at-risk flags and what is overdue.',
   },
   {
     n: '03',
@@ -73,7 +73,7 @@ const features = [
   { title: 'Reminders that expire', body: 'Cards due within a few days become reminders. Close the card and the reminder is gone.' },
   { title: 'Care-gap recommendations', body: 'When a note mentions a condition, CareLoop checks the plan against what is usually expected and suggests what is missing.' },
   { title: 'Auto-close from evidence', body: 'Follow-up notes that confirm something happened close the matching card as verified — scheduled is not the same as done.' },
-  { title: 'Roles that fit the clinic', body: 'Patients, doctors and administrators each get the screen they need, and nothing they do not.' },
+  { title: 'Roles that fit the clinic', body: 'Patients, care coordinators, doctors and administrators each get the screen they need, and nothing they do not.' },
 ]
 
 const stats = [

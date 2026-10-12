@@ -45,7 +45,18 @@ async def current_account(authorization: Annotated[str | None, Header()] = None)
 CurrentAccount = Annotated[Account, Depends(current_account)]
 
 
+async def care_team_account(account: CurrentAccount) -> Account:
+    """Anyone who may work on a patient's plan: care coordinators, doctors and admins.
+
+    Patients are deliberately excluded — their screen is read-only.
+    """
+    if account.role not in (Role.CARE_COORDINATOR, Role.DOCTOR, Role.ADMIN):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Care team access required.")
+    return account
+
+
 async def doctor_account(account: CurrentAccount) -> Account:
+    """Clinical decisions (care-gap recommendations) stay with doctors and admins."""
     if account.role not in (Role.DOCTOR, Role.ADMIN):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Doctor/admin access required.")
     return account
@@ -57,5 +68,6 @@ async def admin_account(account: CurrentAccount) -> Account:
     return account
 
 
+CareTeamAccount = Annotated[Account, Depends(care_team_account)]
 DoctorAccount = Annotated[Account, Depends(doctor_account)]
 AdminAccount = Annotated[Account, Depends(admin_account)]

@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.repositories.review_flags import ReviewFlagRepository
 from app.schemas.card import CardRead
 from app.schemas.review_flag import ReviewFlagRead
+from app.services.auth import DoctorAccount
 from app.services.review_flags import PendingFlagNotFound, ReviewFlagService
 
 router = APIRouter(prefix="/review-flags", tags=["review flags"])
@@ -17,12 +18,12 @@ NOT_PENDING = "No pending flag with this id."
 
 
 @router.get("", response_model=list[ReviewFlagRead])
-async def list_pending_flags(db: DbSession) -> list[ReviewFlagRead]:
+async def list_pending_flags(_: DoctorAccount, db: DbSession) -> list[ReviewFlagRead]:
     return await ReviewFlagRepository(db).list_pending()
 
 
 @router.post("/{flag_id}/approve", response_model=CardRead, status_code=status.HTTP_201_CREATED)
-async def approve_flag(flag_id: int, db: DbSession) -> CardRead:
+async def approve_flag(flag_id: int, _: DoctorAccount, db: DbSession) -> CardRead:
     try:
         return await ReviewFlagService(db).approve(flag_id)
     except PendingFlagNotFound:
@@ -30,7 +31,7 @@ async def approve_flag(flag_id: int, db: DbSession) -> CardRead:
 
 
 @router.post("/{flag_id}/dismiss", status_code=status.HTTP_204_NO_CONTENT)
-async def dismiss_flag(flag_id: int, db: DbSession) -> None:
+async def dismiss_flag(flag_id: int, _: DoctorAccount, db: DbSession) -> None:
     try:
         await ReviewFlagService(db).dismiss(flag_id)
     except PendingFlagNotFound:

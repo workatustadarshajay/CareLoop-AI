@@ -17,6 +17,8 @@ interface CardDependenciesProps {
   dependencies?: Dependency[];
   isAtRisk?: boolean;
   atRiskReason?: string | null;
+  /** Read-only viewers (patients) still see what a card waits on, but cannot change it. */
+  canEdit?: boolean;
   onDependencyCreated?: () => void;
   onDependencyDeleted?: () => void;
 }
@@ -26,6 +28,7 @@ export function CardDependencies({
   dependencies = [],
   isAtRisk = false,
   atRiskReason = null,
+  canEdit = true,
   onDependencyCreated,
   onDependencyDeleted,
 }: CardDependenciesProps) {
@@ -81,13 +84,15 @@ export function CardDependencies({
                   <p className="dependency-item__reason">{dep.reason}</p>
                 )}
 
-                <button
-                  className="dependency-item__delete-btn"
-                  onClick={() => handleDeleteDependency(dep.upstream_card_id)}
-                  title="Remove this dependency"
-                >
-                  ✕
-                </button>
+                {canEdit && (
+                  <button
+                    className="dependency-item__delete-btn"
+                    onClick={() => handleDeleteDependency(dep.upstream_card_id)}
+                    title="Remove this dependency"
+                  >
+                    ✕
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -95,14 +100,16 @@ export function CardDependencies({
 
         {error && <p className="error-message">{error}</p>}
 
-        <button
-          className="dependencies-add-btn"
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? 'Cancel' : '+ Add Dependency'}
-        </button>
+        {canEdit && (
+          <button
+            className="dependencies-add-btn"
+            onClick={() => setShowForm(!showForm)}
+          >
+            {showForm ? 'Cancel' : '+ Add Dependency'}
+          </button>
+        )}
 
-        {showForm && (
+        {canEdit && showForm && (
           <DependencyForm
             cardId={cardId}
             isLoading={isLoading}

@@ -11,6 +11,7 @@ from app.schemas.dependency import (
     DependenciesListResponse,
     DependencyResponse,
 )
+from app.services.auth import CareTeamAccount
 
 router = APIRouter(prefix="/cards", tags=["dependencies"])
 
@@ -21,6 +22,7 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 async def create_dependency(
     card_id: int,
     payload: DependencyCreate,
+    _: CareTeamAccount,
     db: DbSession
 ) -> dict:
     """
@@ -73,6 +75,7 @@ async def get_dependencies(card_id: int, db: DbSession) -> DependenciesListRespo
 async def delete_dependency(
     card_id: int,
     upstream_card_id: int,
+    _: CareTeamAccount,
     db: DbSession
 ) -> dict:
     """Delete a dependency link"""

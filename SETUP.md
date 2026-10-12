@@ -92,7 +92,7 @@ uv run --system-certs alembic upgrade head
 uv run --system-certs alembic current
 ```
 
-The last command should print `0001_create_notes_and_cards (head)`. The migration creates the `notes` and `cards` tables and the `card_type` and `card_status` enum types. Running `upgrade head` again is safe: it does nothing when the database is already up to date.
+The last command should print `0007_care_coordinator (head)`. The migrations create the `notes`, `cards`, `patients`, `accounts`, `card_dependencies`, `reminders` and `review_flags` tables, the `card_type` and `card_status` enum types, and the test logins. Running `upgrade head` again is safe: it does nothing when the database is already up to date.
 
 ### 3.3 Set up the frontend
 
@@ -159,27 +159,35 @@ Run these checks on the machine where the servers run:
 | Check | Command | Expected result |
 | --- | --- | --- |
 | Database is healthy | `docker compose ps` (repository root) | `db` is `Up ... (healthy)` |
-| Schema is current | `uv run --system-certs alembic current` (in `Backend/`) | `0001_create_notes_and_cards (head)` |
+| Schema is current | `uv run --system-certs alembic current` (in `Backend/`) | `0007_care_coordinator (head)` |
 | Backend responds | `curl http://127.0.0.1:8000/api/cards` | `[]` or a JSON list of cards |
 | Vite proxy works | `curl http://127.0.0.1:5173/api/cards` | The same JSON as the previous check |
 
-End-to-end test with Gemini. This saves a real note, and its cards show up in the UI:
+End-to-end test with Gemini. This signs in as a care-team account, saves a real note for patient 1, and the cards show up in the UI:
 
 ```bash
-curl -i -X POST http://127.0.0.1:8000/api/notes/process \
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"text": "Start amoxicillin 500 mg twice daily for 7 days. Get a chest X-ray this week. Follow up in 2 weeks."}'
+  -d '{"username": "dr_smith", "password": "password"}' \
+  | python3 -c 'import sys, json; print(json.load(sys.stdin)["token"])')
+
+curl -i -X POST http://127.0.0.1:8000/api/notes/process \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"text": "Start amoxicillin 500 mg twice daily for 7 days. Get a chest X-ray this week. Follow up in 2 weeks.", "patient_id": 1}'
 ```
 
 Expected: `HTTP/1.1 201 Created` and a body with `note_id` and the saved `cards`, for example a `medication`, a `test`, and a `next_visit` card.
 
+Signing in as `alice` and calling the same endpoint returns `403`: patients read their plan, they do not write to it.
+
 ## 6. Use the app
 
 1. Open <http://localhost:5173> and sign in. Test accounts (password `password` for all):
-   - `admin` — administrator: a patients-only screen (list, search, **+ New patient** which creates the patient and their login). No notes, cards or recommendations.
+   - `admin` — administrator: manages every login (search, **+ New account** with a role picker, **Update** and **Delete** for patients, doctors, care coordinators and administrators). No notes, cards or recommendations.
    - `dr_smith` — doctor: sees every patient's cards (default: the first patient; **Choose patient…** opens a searchable list, or *All patients*), picks the patient when adding a note, can change a card's status or due date, and reviews **Recommendations**.
-   - `alice`, `bob` — patients: see only their own cards, plus a **Your reminders** list for cards due within `REMINDER_DAYS`.
-2. Paste a doctor's note (up to 12,000 characters) into **Doctor's note** (doctor) or a follow-up note such as "MRI completed" (patient). A follow-up that confirms an open card was done closes that card as `verified_closed` automatically.
+   - `coordinator` — care coordinator: chooses any patient, adds an update note such as "MRI completed", changes a card's status or due date, and links dependencies. No **Recommendations** panel (that is a clinical call) and no account management.
+   - `alice`, `bob` — patients: a **read-only** view of their own cards plus a **Your reminders** list for cards due within `REMINDER_DAYS`. There is no note box: the care team updates the plan.
+2. Paste a doctor's note (up to 12,000 characters) into **Doctor's note** (doctor) or an update note such as "MRI completed" (care coordinator). A note that confirms an open card was done closes that card as `verified_closed` automatically.
 3. Click **Process note**. The button reads **Processing...** while Gemini works.
 4. A confirmation shows how many cards were saved. **Your cards** lists every card, newest first.
 
@@ -278,8 +286,15 @@ Backend base URL: `http://127.0.0.1:8000`. Interactive docs: `/docs`.
 
 | Method | Path | Request body | Success | Errors |
 | --- | --- | --- | --- | --- |
-| `POST` | `/api/notes/process` | `{"text": "..."}`, 1 to 12,000 characters after trimming whitespace | `201`, `{"note_id": 1, "cards": [...]}` | `422` invalid body, `503` no API key configured, `500` Gemini or database error |
-| `GET` | `/api/cards` | none | `200`, all cards, newest first | `500` database error |
+| `POST` | `/api/auth/login` | `{"username": "...", "password": "..."}` | `200`, `{"username", "role", "patient_id", "token"}` | `401` wrong credentials |
+| `POST` | `/api/notes/process` | `{"text": "...", "patient_id": 1}`, 1 to 12,000 characters after trimming whitespace | `201`, `{"note_id": 1, "cards": [...], "closed_card_ids": []}` | `403` patient login, `422` invalid body or missing `patient_id`, `503` no API key configured, `500` Gemini or database error |
+| `GET` | `/api/cards` | none | `200`, all cards, newest first (patients get only their own) | `500` database error |
+| `PATCH` | `/api/cards/{id}` | `{"status": "done"}` and/or `{"due_at": "2026-11-01T09:00:00Z"}` | `200`, the updated card | `403` patient login, `404` unknown card |
+| `GET` | `/api/patients` | none | `200`, patients and their logins | `403` patient login |
+| `GET` | `/api/accounts` | none | `200`, every login with its role and patient | `403` unless administrator |
+| `POST` | `/api/accounts` | `{"username", "password", "role": "patient\|care_coordinator\|doctor\|admin", "name"}` (`name` required for patients) | `201`, the created account | `409` username taken, `422` invalid body |
+| `PATCH` | `/api/accounts/{id}` | any of `{"username", "password", "name", "role"}` | `200`, the updated account | `403` own account, `409` username taken, `422` patient role change |
+| `DELETE` | `/api/accounts/{id}` | none | `200`, `{"message": "..."}`. A patient account removes the patient, their notes and their cards | `403` own account or last administrator |
 
 Card object:
 

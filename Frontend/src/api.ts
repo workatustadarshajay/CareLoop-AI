@@ -1,4 +1,4 @@
-export type Role = 'patient' | 'doctor' | 'admin'
+export type Role = 'patient' | 'care_coordinator' | 'doctor' | 'admin'
 
 export type Auth = {
   token: string
