@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,6 +15,12 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     google_api_key: str | None = None
     gemini_model: str = "gemini-3.8-flash"
+    # Which chat model powers note processing, coverage checks and plain language.
+    llm_provider: Literal["gemini", "anthropic", "openai"] = "gemini"
+    anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-sonnet-5-5"
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-5"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     database_pool_size: int = 5
     reminder_days: int = 3
@@ -30,10 +37,6 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         return self.async_database_url.replace("+asyncpg", "", 1)
-
-    @property
-    def api_key(self) -> str | None:
-        return self.gemini_api_key or self.google_api_key
 
     @property
     def cors_origin_list(self) -> list[str]:

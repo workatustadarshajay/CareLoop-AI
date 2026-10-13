@@ -1,10 +1,8 @@
 from collections.abc import Sequence
 
 from langchain_core.language_models import BaseChatModel
-from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
-from app.core.config import Settings
 from app.prompts import load_prompt
 
 
@@ -12,15 +10,6 @@ class CoverageAnswer(BaseModel):
     covered_labels: list[str] = Field(
         default_factory=list,
         description="Exact labels of the expected items that at least one card already covers.",
-    )
-
-
-def build_coverage_model(settings: Settings) -> ChatGoogleGenerativeAI:
-    return ChatGoogleGenerativeAI(
-        model=settings.gemini_model,
-        api_key=settings.api_key,
-        temperature=0,
-        max_retries=2,
     )
 
 

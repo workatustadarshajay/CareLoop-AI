@@ -3,9 +3,10 @@ import logging
 from collections.abc import Sequence
 
 from app.care_gaps.checklist import Diagnosis, ExpectedItem, load_checklist
-from app.care_gaps.coverage import build_coverage_model, covered_items
+from app.care_gaps.coverage import covered_items
 from app.care_gaps.diagnosis import detect_diagnoses
 from app.core.config import get_settings
+from app.core.llm import build_chat_model
 from app.db.session import async_session_factory
 from app.models.card import Card
 from app.models.review_flag import ReviewFlag, ReviewFlagKind
@@ -27,7 +28,7 @@ async def run_care_gap_check(note_id: int, note_text: str, cards: Sequence[Card]
             return []
 
         descriptions = [card.description for card in cards]
-        model = build_coverage_model(get_settings())
+        model = build_chat_model(get_settings())
         # One model call per matched diagnosis, checking all of its expected items at once.
         covered_per_diagnosis = await asyncio.gather(
             *(

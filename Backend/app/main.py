@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
-from app.agents.note_agent import AgentConfigurationError
+from app.core.llm import AgentConfigurationError
 from app.api.routes.cards import router as cards_router
 from app.api.routes.notes import router as notes_router
 from app.api.routes.dependencies import router as dependencies_router

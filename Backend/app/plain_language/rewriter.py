@@ -9,9 +9,8 @@ exactly what the original said — only simpler — plus one generic
 import logging
 import re
 
-from langchain_google_genai import ChatGoogleGenerativeAI
-
 from app.core.config import get_settings
+from app.core.llm import AgentConfigurationError, build_chat_model
 from app.prompts import load_prompt
 
 logger = logging.getLogger(__name__)
@@ -44,17 +43,11 @@ async def rewrite_card_description(description: str, card_type: str) -> str | No
     Returns None (and logs) on any failure — callers must treat the plain
     text as optional and fall back to the clinical description.
     """
-    settings = get_settings()
-    if not settings.api_key:
-        logger.info("plain-language rewrite skipped: no Gemini API key configured")
+    try:
+        model = build_chat_model(get_settings())
+    except AgentConfigurationError as error:
+        logger.info("plain-language rewrite skipped: %s", error)
         return None
-
-    model = ChatGoogleGenerativeAI(
-        model=settings.gemini_model,
-        api_key=settings.api_key,
-        temperature=0,
-        max_retries=2,
-    )
 
     try:
         response = await model.ainvoke(
